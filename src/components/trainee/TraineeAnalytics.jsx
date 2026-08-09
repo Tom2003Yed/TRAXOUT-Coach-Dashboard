@@ -35,11 +35,11 @@ const mockAnalyticsData = {
     }
   },
   topExercises: [
-    { rank: 1, name: 'Barbell Bench Press', category: 'Chest', totalVolume: '1,420 kg' },
-    { rank: 2, name: 'Lat Pulldown', category: 'Back', totalVolume: '1,150 kg' },
-    { rank: 3, name: 'Incline Dumbbell Press', category: 'Chest', totalVolume: '980 kg' },
-    { rank: 4, name: 'Barbell Squat', category: 'Legs', totalVolume: '850 kg' },
-    { rank: 5, name: 'Dumbbell Bicep Curl', category: 'Arms', totalVolume: '620 kg' }
+    { rank: 1, name: 'Barbell Bench Press', category: 'Chest', totalSets: 24 },
+    { rank: 2, name: 'Lat Pulldown', category: 'Back', totalSets: 20 },
+    { rank: 3, name: 'Incline Dumbbell Press', category: 'Chest', totalSets: 18 },
+    { rank: 4, name: 'Barbell Squat', category: 'Legs', totalSets: 15 },
+    { rank: 5, name: 'Dumbbell Bicep Curl', category: 'Arms', totalSets: 12 }
   ],
   targetedMuscles: [
     { name: 'Pectoralis Major', sets: 22, percentage: 32 },
@@ -228,7 +228,7 @@ function TraineeAnalytics() {
 
         <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
           <h4 className="text-base font-bold text-gray-900 mb-4">
-            TOP 5 Exercises (Weekly / Monthly)
+            TOP 5 Exercises (By Total Sets)
           </h4>
           <div className="divide-y divide-gray-100">
             {topExercises.map((exercise) => (
@@ -247,7 +247,7 @@ function TraineeAnalytics() {
                   </div>
                 </div>
                 <span className="text-xs font-bold text-gray-700 bg-gray-50 px-2.5 py-1 rounded border border-gray-200">
-                  {exercise.totalVolume}
+                  {exercise.totalSets} sets
                 </span>
               </div>
             ))}

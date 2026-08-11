@@ -7,6 +7,24 @@ const mockOverviewData = {
         monthly: '56 mins'
     },
     programAdherenceScore: '91%',
+    avgSetSize: {
+        weekly: '11.2 reps',
+        monthlyAvg: '10.4 reps',
+        trend: '+5%'
+    },
+    weeklySetCount: {
+        current: 19,
+        recommended: 18,
+        trend: '+8.5%',
+        alert: 'Optimal Load'
+    },
+    workRestRatio: {
+        weekly: '1:2.1',
+        monthlyAvg: '1:2.3',
+        trend: '+6%',
+        workPercent: 32,
+        restPercent: 68
+    },
     popularExercises: [
         { rank: 1, name: 'Barbell Bench Press', category: 'Chest', usageCount: 342 },
         { rank: 2, name: 'Lat Pulldown', category: 'Back', usageCount: 298 },
@@ -41,6 +59,10 @@ function AllTraineesView() {
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
     };
+
+    const ratio = mockOverviewData.workRestRatio;
+    const strokeDasharray = 220;
+    const workDashoffset = strokeDasharray - (strokeDasharray * ratio.workPercent) / 100;
 
     return (
         <div className="max-w-7xl mx-auto p-8 space-y-8 text-left" dir="ltr">
@@ -125,6 +147,103 @@ function AllTraineesView() {
                     <div className="text-3xl font-extrabold text-gray-900">
                         {mockOverviewData.programAdherenceScore}
                     </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">
+                                Work / Rest Ratio (All Trainees)
+                            </span>
+                            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                                {ratio.trend}
+                            </span>
+                        </div>
+
+                        <div className="relative flex flex-col items-center justify-center my-2">
+                            <svg className="w-44 h-24" viewBox="0 0 160 90">
+                                <path
+                                    d="M 20 80 A 60 60 0 0 1 140 80"
+                                    fill="none"
+                                    stroke="#ef4444"
+                                    strokeWidth="16"
+                                    strokeLinecap="round"
+                                />
+                                <path
+                                    d="M 20 80 A 60 60 0 0 1 140 80"
+                                    fill="none"
+                                    stroke="#22c55e"
+                                    strokeWidth="16"
+                                    strokeLinecap="round"
+                                    strokeDasharray={strokeDasharray}
+                                    strokeDashoffset={workDashoffset}
+                                />
+                            </svg>
+                            <div className="absolute bottom-1 text-center">
+                                <span className="text-xl font-extrabold text-gray-900 block leading-none">
+                                    {ratio.weekly}
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-semibold uppercase">
+                                    Ratio
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center px-4 mt-1 pt-2 border-t border-gray-100">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                                <span className="text-xs font-bold text-gray-700">Work: {ratio.workPercent}%</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                                <span className="text-xs font-bold text-gray-700">Rest: {ratio.restPercent}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <span className="text-xs text-gray-500 mt-3 block">
+                        Monthly Average: {ratio.monthlyAvg}
+                    </span>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
+                            Avg Set Size (Weekly / Monthly)
+                        </span>
+                        <div className="flex items-baseline justify-between mb-1">
+                            <span className="text-2xl font-bold text-gray-800">
+                                {mockOverviewData.avgSetSize.weekly}
+                            </span>
+                            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                                {mockOverviewData.avgSetSize.trend}
+                            </span>
+                        </div>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                        Monthly Average: {mockOverviewData.avgSetSize.monthlyAvg}
+                    </span>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
+                            Avg Weekly Set Count
+                        </span>
+                        <div className="flex items-baseline justify-between mb-1">
+                            <span className="text-2xl font-bold text-gray-800">
+                                {mockOverviewData.weeklySetCount.current} Sets
+                            </span>
+                            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                                {mockOverviewData.weeklySetCount.alert}
+                            </span>
+                        </div>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                        Trend: {mockOverviewData.weeklySetCount.trend} vs last month
+                    </span>
                 </div>
             </div>
 

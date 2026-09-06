@@ -9,42 +9,49 @@ function SingleTraineeView() {
     const { selectedTraineeId } = useContext(AppContext);
 
     const getBtnClass = (tabName) =>
-        `px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tabName
-            ? 'bg-black text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        `px-5 py-2.5 rounded-xl font-mono text-xs font-semibold tracking-wider transition-all duration-200 uppercase border ${
+            activeTab === tabName
+                ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                : 'bg-[#181b20] text-gray-400 border-gray-800/80 hover:bg-[#22262d] hover:text-gray-200'
         }`;
 
     return (
-        <div className="flex gap-8 p-8 max-w-7xl mx-auto min-h-[85vh]">
+        <div className="flex flex-col lg:flex-row gap-8 p-6 md:p-8 max-w-7xl mx-auto min-h-[85vh]">
             <Sidebar />
 
-            <main className="flex-1 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
+            <main className="flex-1 bg-[#121418] p-6 md:p-8 rounded-2xl border border-gray-800/80 shadow-xl flex flex-col">
                 {!selectedTraineeId ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-gray-200 rounded-xl">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-2xl text-gray-400">
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-12 border-2 border-dashed border-gray-800 rounded-2xl bg-[#181b20]/50">
+                        <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center mb-4 text-2xl text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.1)]">
                             👤
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Select a Trainee</h2>
-                        <p className="text-gray-500 max-w-sm">
-                            Please choose a trainee from the list on the side to view their history and analytics.
+                        <h2 className="text-xl font-bold text-white mb-2">Select a Trainee Profile</h2>
+                        <p className="text-gray-400 text-sm max-w-sm font-mono">
+                            Choose an active athlete from the roster sidebar to inspect performance history and real-time metrics.
                         </p>
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col">
-                        <div className="flex justify-center gap-6 mb-8 border-b pb-6">
-                            <button
-                                onClick={() => setActiveTab('history')}
-                                className={getBtnClass('history')}
-                            >
-                                Trainee History
-                            </button>
+                        <div className="flex items-center justify-between border-b border-gray-800/80 pb-6 mb-8">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setActiveTab('history')}
+                                    className={getBtnClass('history')}
+                                >
+                                    Session History
+                                </button>
 
-                            <button
-                                onClick={() => setActiveTab('analytics')}
-                                className={getBtnClass('analytics')}
-                            >
-                                Trainee Analytics
-                            </button>
+                                <button
+                                    onClick={() => setActiveTab('analytics')}
+                                    className={getBtnClass('analytics')}
+                                >
+                                    Trainee Analytics
+                                </button>
+                            </div>
+
+                            <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full hidden sm:inline-block">
+                                ● Last Synced 2m ago
+                            </span>
                         </div>
 
                         <div className="flex-1">

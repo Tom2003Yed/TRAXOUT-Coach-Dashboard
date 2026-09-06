@@ -1,33 +1,30 @@
-import { useState } from 'react'
-import { AppContext } from './AppContext'
-import { Routes, Route, BrowserRouter } from 'react-router-dom'
-import Navbar from './components/bars/Navbar'
-import TraxoutOverview from './components/dashboard/TraxoutOverview'
-import SingleTraineeView from './components/dashboard/SingleTraineeView'
-import AllTraineesView from './components/dashboard/AllTraineesView'
+import React from 'react';
+import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import SidebarNav from './components/bars/SidebarNav';
+import BriefView from './components/dashboard/BriefView';
+import TraineesView from './components/dashboard/TraineesView';
+import AllTraineesView from './components/dashboard/AllTraineesView';
+import TraxoutOverview from './components/dashboard/TraxoutOverview';
 
 function App() {
-  const [selectedTraineeId, setSelectedTraineeId] = useState(null);
-
-  const contextValue = {
-    selectedTraineeId,
-    setSelectedTraineeId
-  };
-
   return (
     <BrowserRouter>
-      <AppContext.Provider value={contextValue}>
-        <div className="min-h-screen bg-gray-50 text-gray-900" dir="rtl">
-          <Navbar />
+      <div className="min-h-screen bg-[#0d0f12] text-gray-100 flex font-sans selection:bg-cyan-500 selection:text-black" dir="ltr">
+        {/* Left Sidebar Navigation */}
+        <SidebarNav />
+
+        {/* Main Content View */}
+        <main className="flex-1 overflow-y-auto">
           <Routes>
-            <Route path='/' element={<AllTraineesView />} />
-            <Route path='/single' element={<SingleTraineeView />} />
-            <Route path='/traxout' element={<TraxoutOverview />} />
+            <Route path="/" element={<BriefView />} />
+            <Route path="/trainees" element={<TraineesView />} />
+            <Route path="/analytics" element={<AllTraineesView />} />
+            <Route path="/value" element={<TraxoutOverview />} />
           </Routes>
-        </div>
-      </AppContext.Provider >
+        </main>
+      </div>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

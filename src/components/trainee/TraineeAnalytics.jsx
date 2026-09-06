@@ -4,7 +4,8 @@ const mockAnalyticsData = {
   holisticMetrics: {
     streakDays: 14,
     totalWorkouts: 48,
-    baseRating: '8.9 / 10'
+    baseRating: '92',
+    maxRating: '100'
   },
   monthlyWeeklyAnalytics: {
     avgSetSize: {
@@ -26,8 +27,8 @@ const mockAnalyticsData = {
       alert: 'Optimal Load'
     },
     avgWorkoutDuration: {
-      weekly: '54 mins',
-      monthlyAvg: '58 mins'
+      weekly: '54 MIN',
+      monthlyAvg: '58 MIN'
     },
     weeklyMonthlyWorkouts: {
       weeklyCount: 4,
@@ -50,174 +51,125 @@ const mockAnalyticsData = {
   ]
 };
 
-function TraineeAnalytics() {
-  const { holisticMetrics, monthlyWeeklyAnalytics, topExercises, targetedMuscles } = mockAnalyticsData;
+const analyticsVariations = {
+  'Marcus Sterling': { streakDays: 14, totalWorkouts: 48, baseRating: '92', avgSet: '10.5 reps', duration: '54 MIN', topExercise: 'Barbell Bench Press' },
+  'Elena Rodriguez': { streakDays: 21, totalWorkouts: 56, baseRating: '88', avgSet: '12.2 reps', duration: '48 MIN', topExercise: 'Dumbbell Lunge' },
+  'David Chen': { streakDays: 9, totalWorkouts: 41, baseRating: '85', avgSet: '8.7 reps', duration: '61 MIN', topExercise: 'Deadlift' },
+  'Sarah Jenkins': { streakDays: 17, totalWorkouts: 52, baseRating: '91', avgSet: '11.4 reps', duration: '46 MIN', topExercise: 'Power Clean' },
+  "James O'Connor": { streakDays: 12, totalWorkouts: 39, baseRating: '79', avgSet: '9.3 reps', duration: '57 MIN', topExercise: 'Pull-up' }
+};
+
+function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
+  const variation = analyticsVariations[traineeName] || analyticsVariations['Marcus Sterling'];
+  const { holisticMetrics, monthlyWeeklyAnalytics, topExercises, targetedMuscles } = {
+    ...mockAnalyticsData,
+    holisticMetrics: { ...mockAnalyticsData.holisticMetrics, streakDays: variation.streakDays, totalWorkouts: variation.totalWorkouts, baseRating: variation.baseRating },
+    monthlyWeeklyAnalytics: { ...mockAnalyticsData.monthlyWeeklyAnalytics, avgSetSize: { ...mockAnalyticsData.monthlyWeeklyAnalytics.avgSetSize, weekly: variation.avgSet }, avgWorkoutDuration: { ...mockAnalyticsData.monthlyWeeklyAnalytics.avgWorkoutDuration, weekly: variation.duration } },
+    topExercises: mockAnalyticsData.topExercises.map((exercise, index) => index === 0 ? { ...exercise, name: variation.topExercise } : exercise)
+  };
   const ratio = monthlyWeeklyAnalytics.workRestRatio;
 
-  const strokeDasharray = 220;
-  const workDashoffset = strokeDasharray - (strokeDasharray * ratio.workPercent) / 100;
-
   return (
-    <div className="space-y-6 text-left" dir="ltr">
+    <div className="space-y-6 text-left font-sans" dir="ltr">
+      {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2">
             Consistency Streak
           </span>
-          <div className="text-3xl font-extrabold text-gray-900">
-            {holisticMetrics.streakDays} <span className="text-lg font-medium text-gray-500">Days</span>
+          <div className="text-3xl font-black text-white font-mono">
+            {holisticMetrics.streakDays} <span className="text-xs text-cyan-400">DAYS</span>
           </div>
         </div>
 
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2">
             Total Workouts
           </span>
-          <div className="text-3xl font-extrabold text-gray-900">
+          <div className="text-3xl font-black text-white font-mono">
             {holisticMetrics.totalWorkouts}
           </div>
         </div>
 
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 shadow-sm">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
-            Base Performance Rating
-          </span>
-          <div className="text-3xl font-extrabold text-gray-900">
-            {holisticMetrics.baseRating}
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2">
+              Baseline Score
+            </span>
+            <div className="text-3xl font-black text-white font-mono">
+              {holisticMetrics.baseRating} <span className="text-xs text-gray-500">/ 100</span>
+            </div>
+          </div>
+          <div className="w-12 h-12 rounded-full border-2 border-cyan-400 flex items-center justify-center text-cyan-400 font-mono text-xs font-bold shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+            +3
           </div>
         </div>
       </div>
 
+      {/* Grid Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
-            Avg Set Size (Weekly / Monthly)
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-3">
+            Avg Set Size
           </span>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-2xl font-bold text-gray-800">{monthlyWeeklyAnalytics.avgSetSize.weekly}</span>
-            <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-2xl font-bold text-white font-mono">{monthlyWeeklyAnalytics.avgSetSize.weekly}</span>
+            <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
               {monthlyWeeklyAnalytics.avgSetSize.trend}
             </span>
           </div>
-          <span className="text-xs text-gray-500">
-            Monthly Average: {monthlyWeeklyAnalytics.avgSetSize.monthlyAvg}
+          <span className="text-xs text-gray-500 font-mono">
+            Monthly Avg: {monthlyWeeklyAnalytics.avgSetSize.monthlyAvg}
           </span>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">
-                Work / Rest Ratio
-              </span>
-              <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                {ratio.trend}
-              </span>
-            </div>
-
-            <div className="relative flex flex-col items-center justify-center my-2">
-              <svg className="w-44 h-24" viewBox="0 0 160 90">
-                <path
-                  d="M 20 80 A 60 60 0 0 1 140 80"
-                  fill="none"
-                  stroke="#ef4444"
-                  strokeWidth="16"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M 20 80 A 60 60 0 0 1 140 80"
-                  fill="none"
-                  stroke="#22c55e"
-                  strokeWidth="16"
-                  strokeLinecap="round"
-                  strokeDasharray={strokeDasharray}
-                  strokeDashoffset={workDashoffset}
-                />
-              </svg>
-              <div className="absolute bottom-1 text-center">
-                <span className="text-xl font-extrabold text-gray-900 block leading-none">
-                  {ratio.weekly}
-                </span>
-                <span className="text-[10px] text-gray-400 font-semibold uppercase">
-                  Ratio
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center px-4 mt-1 pt-2 border-t border-gray-100">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                <span className="text-xs font-bold text-gray-700">Work: {ratio.workPercent}%</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                <span className="text-xs font-bold text-gray-700">Rest: {ratio.restPercent}%</span>
-              </div>
-            </div>
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+              Work / Rest Ratio
+            </span>
+            <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+              {ratio.trend}
+            </span>
           </div>
-
-          <span className="text-xs text-gray-500 mt-3 block">
-            Monthly Average: {ratio.monthlyAvg}
+          <div className="text-2xl font-bold text-white font-mono mb-2">{ratio.weekly}</div>
+          <span className="text-xs text-gray-500 font-mono block">
+            Monthly Avg: {ratio.monthlyAvg}
           </span>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
-            Weekly Set Count & Alert
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-3">
+            Weekly Set Count
           </span>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-2xl font-bold text-gray-800">{monthlyWeeklyAnalytics.weeklySetCount.current} Sets</span>
-            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-2xl font-bold text-white font-mono">{monthlyWeeklyAnalytics.weeklySetCount.current} Sets</span>
+            <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
               {monthlyWeeklyAnalytics.weeklySetCount.alert}
             </span>
           </div>
-          <span className="text-xs text-gray-500">
-            Trend: {monthlyWeeklyAnalytics.weeklySetCount.trend} vs last month
-          </span>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
-            Avg Workout Duration
-          </span>
-          <div className="text-2xl font-bold text-gray-800 mb-1">
-            {monthlyWeeklyAnalytics.avgWorkoutDuration.weekly}
-          </div>
-          <span className="text-xs text-gray-500">
-            Monthly Average: {monthlyWeeklyAnalytics.avgWorkoutDuration.monthlyAvg}
-          </span>
-        </div>
-
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm md:col-span-2 lg:col-span-2">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">
-            Weekly Workouts & Monthly Average
-          </span>
-          <div className="flex items-baseline gap-4 mb-1">
-            <span className="text-2xl font-bold text-gray-800">
-              {monthlyWeeklyAnalytics.weeklyMonthlyWorkouts.weeklyCount} Workouts This Week
-            </span>
-          </div>
-          <span className="text-xs text-gray-500">
-            Monthly Frequency Average: {monthlyWeeklyAnalytics.weeklyMonthlyWorkouts.monthlyAvg}
+          <span className="text-xs text-gray-500 font-mono">
+            Trend: {monthlyWeeklyAnalytics.weeklySetCount.trend}
           </span>
         </div>
       </div>
 
+      {/* Target Muscles & Top Exercises */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <h4 className="text-base font-bold text-gray-900 mb-4">
-            Targeted Muscles Summary (Sets & Percentage)
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+          <h4 className="text-xs font-bold text-white uppercase font-mono tracking-wider mb-4">
+            Targeted Muscles Distribution
           </h4>
           <div className="space-y-3">
             {targetedMuscles.map((muscle, idx) => (
               <div key={idx} className="space-y-1">
-                <div className="flex justify-between text-xs font-semibold text-gray-700">
-                  <span>{muscle.name}</span>
-                  <span>{muscle.sets} sets ({muscle.percentage}%)</span>
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-gray-300">{muscle.name}</span>
+                  <span className="text-cyan-400">{muscle.sets} sets ({muscle.percentage}%)</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
+                <div className="w-full bg-[#121418] rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="bg-black h-2 rounded-full transition-all"
+                    className="bg-cyan-500 h-full rounded-full shadow-[0_0_8px_rgba(6,182,212,0.4)]"
                     style={{ width: `${muscle.percentage}%` }}
                   />
                 </div>
@@ -226,27 +178,23 @@ function TraineeAnalytics() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-          <h4 className="text-base font-bold text-gray-900 mb-4">
-            TOP 5 Exercises (By Total Sets)
+        <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+          <h4 className="text-xs font-bold text-white uppercase font-mono tracking-wider mb-4">
+            Top 5 Exercises (By Sets)
           </h4>
-          <div className="divide-y divide-gray-100">
+          <div className="space-y-2.5">
             {topExercises.map((exercise) => (
-              <div key={exercise.rank} className="py-2.5 flex items-center justify-between">
+              <div key={exercise.rank} className="p-2.5 bg-[#121418] rounded-xl border border-gray-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-800 text-xs font-bold flex items-center justify-center">
+                  <span className="w-5 h-5 rounded bg-gray-800 text-cyan-400 font-mono text-[10px] font-bold flex items-center justify-center">
                     #{exercise.rank}
                   </span>
                   <div>
-                    <span className="text-sm font-semibold text-gray-800 block">
-                      {exercise.name}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {exercise.category}
-                    </span>
+                    <span className="text-xs font-semibold text-gray-200 block">{exercise.name}</span>
+                    <span className="text-[10px] font-mono text-gray-500">{exercise.category}</span>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-gray-700 bg-gray-50 px-2.5 py-1 rounded border border-gray-200">
+                <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
                   {exercise.totalSets} sets
                 </span>
               </div>

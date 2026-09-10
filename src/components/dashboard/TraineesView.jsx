@@ -1,75 +1,56 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import TopHeader from '../bars/TopHeader';
 import TraineeHistory from '../trainee/TraineeHistory';
 import TraineeAnalytics from '../trainee/TraineeAnalytics';
+import { AppContext } from '../../AppContext';
 
-const trainees = [
-    {
-        id: 'TR-8924',
-        name: 'Marcus Sterling',
-        tier: 'Sprinter • Pro',
-        score: 92,
-        image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=160&q=80',
-        height: '188 cm',
-        weight: '84.5 kg',
-        age: 24,
-        gender: 'M',
-    },
-    {
-        id: 'TR-4412',
-        name: 'Elena Rodriguez',
-        tier: 'Endurance • Elite',
-        score: 88,
-        image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80',
-        height: '172 cm',
-        weight: '64 kg',
-        age: 27,
-        gender: 'F',
-    },
-    {
-        id: 'TR-1099',
-        name: 'David Chen',
-        tier: 'Strength • Pro',
-        score: 85,
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
-        height: '181 cm',
-        weight: '91 kg',
-        age: 29,
-        gender: 'M',
-    },
-    {
-        id: 'TR-2301',
-        name: 'Sarah Jenkins',
-        tier: 'CrossFit • Tier 1',
-        score: 91,
-        image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=160&q=80',
-        height: '168 cm',
-        weight: '62 kg',
-        age: 26,
-        gender: 'F',
-    },
-    {
-        id: 'TR-7782',
-        name: "James O'Connor",
-        tier: 'Triathlete • Pro',
-        score: 79,
-        image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=160&q=80',
-        height: '184 cm',
-        weight: '78 kg',
-        age: 31,
-        gender: 'M',
-    },
-];
+const ratingRanges = {
+    YEAR: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
+    QUARTER: ['W1', 'W3', 'W5', 'W7', 'W9', 'W12'],
+    MONTH: ['1', '5', '10', '15', '20', '25', '30'],
+    WEEK: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+};
+
+const getRatingHistory = (score, range) => {
+    const patterns = {
+        YEAR: [-7, -5, -3, -4, -1, 0],
+        QUARTER: [-4, -2, -3, -1, 1, 0],
+        MONTH: [-3, -1, -2, 0, 1, 0, 2],
+        WEEK: [-2, -1, 1, 0, 2, 1, 0]
+    };
+
+    return ratingRanges[range].map((label, index) => ({
+        label,
+        value: Math.min(100, Math.max(60, Number(score) + patterns[range][index]))
+    }));
+};
 
 function TraineesView() {
-    const [selectedTrainee, setSelectedTrainee] = useState(trainees[0]);
+    const location = useLocation();
+    const { trainees, updateTraineeStatus } = useContext(AppContext);
+    const [selectedTrainee, setSelectedTrainee] = useState(location.state?.trainee || trainees[0]);
     const [activeTab, setActiveTab] = useState('history');
     const [search, setSearch] = useState('');
     const [expandedImage, setExpandedImage] = useState(null);
+    const [isRatingChartOpen, setIsRatingChartOpen] = useState(false);
+    const [ratingRange, setRatingRange] = useState('MONTH');
 
     const visibleTrainees = trainees.filter((trainee) =>
         trainee.name.toLowerCase().includes(search.toLowerCase())
     );
+    const ratingHistory = getRatingHistory(selectedTrainee.score, ratingRange);
+    const chartMin = 60;
+    const chartMax = 100;
+    const chartWidth = 640;
+    const chartHeight = 250;
+    const chartPoints = ratingHistory
+        .map((point, index) => {
+            const x = (index / (ratingHistory.length - 1)) * chartWidth;
+            const y = chartHeight - ((point.value - chartMin) / (chartMax - chartMin)) * chartHeight;
+            return `${x},${y}`;
+        })
+        .join(' ');
 
     return (
         <div className="min-h-screen bg-[#0d0f12] font-sans text-left" dir="ltr">
@@ -85,7 +66,7 @@ function TraineesView() {
                             Trainees Roster
                         </h2>
                         <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded">
-                            5 Active
+                            {trainees.length} Active
                         </span>
                     </div>
 
@@ -175,8 +156,7 @@ function TraineesView() {
                     </div>
 
                     <div className="flex justify-between text-[10px] font-mono text-gray-500 border-t border-gray-800 mt-4 pt-3">
-                        <span>Total in roster: 24</span>
-                        <span className="text-cyan-400">+ Add Trainee</span>
+                        <span>Total in roster: {trainees.length}</span>
                     </div>
                 </aside>
 
@@ -200,9 +180,31 @@ function TraineesView() {
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-3">
                                     <h2 className="text-3xl font-black text-white">{selectedTrainee.name}</h2>
-                                    <span className="text-[10px] font-mono text-emerald-400 border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 rounded">
-                                        Active Status
-                                    </span>
+                                    <select
+                                        value={selectedTrainee.status}
+                                        onChange={(event) => {
+                                            const status = event.target.value;
+                                            updateTraineeStatus(selectedTrainee.id, status);
+                                            setSelectedTrainee({ ...selectedTrainee, status });
+                                        }}
+                                        aria-label={`Set risk status for ${selectedTrainee.name}`}
+                                        className={`text-[10px] font-mono border px-2 py-1 rounded outline-none ${selectedTrainee.status === 'CRITICAL'
+                                            ? 'text-rose-400 border-rose-500/30 bg-rose-500/10'
+                                            : selectedTrainee.status === 'AT RISK'
+                                                ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+                                                : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+                                            }`}
+                                    >
+                                        <option value="ACTIVE" style={{ color: '#10b981', backgroundColor: '#ecfdf5' }}>
+                                            Active Status
+                                        </option>
+                                        <option value="AT RISK" style={{ color: '#d97706', backgroundColor: '#fffbeb' }}>
+                                            At Risk
+                                        </option>
+                                        <option value="CRITICAL" style={{ color: '#e11d48', backgroundColor: '#fff1f2' }}>
+                                            Critical Risk
+                                        </option>
+                                    </select>
                                 </div>
                                 <p className="text-xs font-mono tracking-widest text-cyan-400 mt-1 uppercase">
                                     {selectedTrainee.tier}
@@ -236,6 +238,12 @@ function TraineesView() {
                             <span className="text-[11px] text-emerald-400 font-mono mt-3">
                                 ↗ +3 pts since last evaluation
                             </span>
+                            <button
+                                onClick={() => setIsRatingChartOpen(true)}
+                                className="mt-3 px-3 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-[10px] font-mono text-cyan-300 hover:bg-cyan-500/20 transition-colors"
+                            >
+                                Click to view chart
+                            </button>
                         </div>
                     </div>
 
@@ -298,6 +306,79 @@ function TraineesView() {
                         <p className="mt-3 text-sm font-mono text-white bg-black/60 px-3 py-1 rounded">
                             {expandedImage.name}
                         </p>
+                    </div>
+                </div>
+            )}
+
+            {isRatingChartOpen && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`${selectedTrainee.name} rating history`}
+                    onClick={() => setIsRatingChartOpen(false)}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+                >
+                    <div
+                        onClick={(event) => event.stopPropagation()}
+                        className="w-full max-w-3xl rounded-2xl border border-cyan-500/30 bg-[#12191d] p-5 shadow-[0_0_40px_rgba(34,211,238,0.12)]"
+                    >
+                        <div className="flex items-start justify-between gap-4 mb-5">
+                            <div>
+                                <p className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">Rating History</p>
+                                <h3 className="mt-1 text-xl font-bold text-white">{selectedTrainee.name}</h3>
+                            </div>
+                            <button
+                                onClick={() => setIsRatingChartOpen(false)}
+                                aria-label="Close rating chart"
+                                className="w-8 h-8 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:border-cyan-400"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-5">
+                            {Object.keys(ratingRanges).map((range) => (
+                                <button
+                                    key={range}
+                                    onClick={() => setRatingRange(range)}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-mono transition-colors ${ratingRange === range
+                                        ? 'bg-cyan-300 text-[#071014]'
+                                        : 'border border-gray-700 bg-[#181b20] text-gray-400 hover:border-cyan-500/50 hover:text-cyan-300'
+                                        }`}
+                                >
+                                    {range}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="overflow-x-auto rounded-xl border border-gray-800 bg-[#0d1215] p-3">
+                            <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 36}`} className="min-w-[560px] w-full h-64" role="img" aria-label={`${ratingRange.toLowerCase()} rating chart`}>
+                                {[60, 70, 80, 90, 100].map((value) => {
+                                    const y = chartHeight - ((value - chartMin) / (chartMax - chartMin)) * chartHeight;
+                                    return (
+                                        <g key={value}>
+                                            <line x1="0" y1={y} x2={chartWidth} y2={y} stroke="#27343b" strokeDasharray="4 6" />
+                                            <text x="0" y={y - 5} fill="#718096" fontSize="11" fontFamily="monospace">{value}</text>
+                                        </g>
+                                    );
+                                })}
+                                <polyline points={chartPoints} fill="none" stroke="#22d3ee" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                                {ratingHistory.map((point, index) => {
+                                    const x = (index / (ratingHistory.length - 1)) * chartWidth;
+                                    const y = chartHeight - ((point.value - chartMin) / (chartMax - chartMin)) * chartHeight;
+                                    return (
+                                        <g key={point.label}>
+                                            <circle cx={x} cy={y} r="6" fill="#12191d" stroke="#67e8f9" strokeWidth="3" />
+                                            <text x={x} y={chartHeight + 25} textAnchor="middle" fill="#718096" fontSize="11" fontFamily="monospace">{point.label}</text>
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+                        </div>
+                        <div className="flex items-center justify-between mt-4 text-[10px] font-mono text-gray-500">
+                            <span>Rating scale: 60 - 100</span>
+                            <span className="text-cyan-300">Current: {selectedTrainee.score}/100</span>
+                        </div>
                     </div>
                 </div>
             )}

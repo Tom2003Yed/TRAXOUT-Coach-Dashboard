@@ -227,6 +227,7 @@ function TraineeHistory({ profile }) {
                                                             <tr className="text-gray-500 border-b border-gray-800">
                                                                 <th className="pb-2">SET</th>
                                                                 <th className="pb-2">REPS COMPLETED</th>
+                                                                <th className="pb-2">REST</th>
                                                                 <th className="pb-2">KG</th>
                                                             </tr>
                                                         </thead>
@@ -235,6 +236,7 @@ function TraineeHistory({ profile }) {
                                                                 <tr key={set.set}>
                                                                     <td className="py-2">{set.set}</td>
                                                                     <td className="py-2 text-cyan-400">{set.actual}</td>
+                                                                    <td className="py-2 text-amber-300">{set.rest || 'Not set'}</td>
                                                                     <td className="py-2 text-white">{set.weight}</td>
                                                                 </tr>
                                                             ))}

@@ -18,7 +18,7 @@ const musclePositions = {
     FULL: { top: '45%', left: '50%' }
 };
 
-function WorkoutCard({ title, date, duration, ratio, restTimes, exerciseType, type, image, bodyImage, muscles = [], isExpanded, onToggle }) {
+function WorkoutCard({ title, date, duration, ratio, restTimes, exerciseType, type, image, bodyImage, muscles = [], isExpanded, onToggle, onCompare }) {
     return (
         <div className="bg-[#181b20] border border-gray-800/80 hover:border-cyan-500/40 rounded-2xl p-5 shadow-lg transition-all font-sans text-left" dir="ltr">
             {bodyImage && <div className="relative h-56 mb-4 rounded-xl overflow-hidden border border-gray-800 bg-[#0f1316]"><img src={bodyImage} alt={'view of human body showing trained muscles'} className="w-full h-full object-contain object-center opacity-80" /></div>}
@@ -47,9 +47,14 @@ function WorkoutCard({ title, date, duration, ratio, restTimes, exerciseType, ty
 
             <div className="mb-3"><span className="text-[10px] text-gray-500 block font-mono uppercase">Muscles Worked</span><span className="text-xs font-mono text-red-300">{muscles.length ? muscles.join(' • ') : 'Not set'}</span></div>
 
-            <button onClick={onToggle} className="w-full py-2 bg-[#121418] hover:bg-cyan-500/10 text-gray-300 hover:text-cyan-400 border border-gray-800 hover:border-cyan-500/30 rounded-xl text-xs font-mono transition-colors">
-                {isExpanded ? 'Hide Full Details' : 'View Full Details'}
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button onClick={onToggle} className="w-full py-2 bg-[#121418] hover:bg-cyan-500/10 text-gray-300 hover:text-cyan-400 border border-gray-800 hover:border-cyan-500/30 rounded-xl text-xs font-mono transition-colors">
+                    {isExpanded ? 'Hide Details' : 'View Details'}
+                </button>
+                <button onClick={onCompare} className="w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400/50 rounded-xl text-xs font-mono transition-colors">
+                    Compare to Plan
+                </button>
+            </div>
         </div>
     );
 }

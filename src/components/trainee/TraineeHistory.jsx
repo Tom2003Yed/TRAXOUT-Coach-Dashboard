@@ -160,6 +160,7 @@ const getExerciseType = (exerciseName) => {
 
 function TraineeHistory({ profile }) {
     const [selectedWorkouts, setSelectedWorkouts] = useState(new Set());
+    const [comparisonWorkout, setComparisonWorkout] = useState(null);
     const workouts = workoutProfiles[profile?.gender === 'F' ? 'female' : 'male'];
     const profileImage = profile?.image;
 
@@ -198,6 +199,7 @@ function TraineeHistory({ profile }) {
                                     muscles={workout.targetMuscles}
                                     isExpanded={isExpanded}
                                     onToggle={toggleWorkout}
+                                    onCompare={() => setComparisonWorkout(workout)}
                                 />
 
                                 {/* Expanded Details */}
@@ -252,6 +254,76 @@ function TraineeHistory({ profile }) {
                     })}
                 </div>
             </div>
+
+            {comparisonWorkout && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true" aria-labelledby="comparison-title">
+                    <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-700 bg-[#121418] shadow-2xl">
+                        <div className="flex items-start justify-between gap-4 border-b border-gray-800 p-5">
+                            <div>
+                                <p className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Plan Comparison</p>
+                                <h3 id="comparison-title" className="mt-1 text-xl font-bold text-white">{comparisonWorkout.title}</h3>
+                                <p className="mt-1 text-xs font-mono text-gray-500">Green matches the plan. Red needs attention.</p>
+                            </div>
+                            <button onClick={() => setComparisonWorkout(null)} aria-label="Close comparison" className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-mono text-gray-300 hover:border-gray-500 hover:text-white">
+                                Close
+                            </button>
+                        </div>
+
+                        <div className="overflow-y-auto p-5">
+                            <div className="space-y-4">
+                                {comparisonWorkout.exercises.map((exercise) => {
+                                    const plannedSets = exercise.sets.length;
+                                    const completedSets = exercise.sets.filter((set) => set.actual !== undefined).length;
+                                    const exerciseMatches = plannedSets === completedSets && exercise.sets.every((set) => set.actual === set.target);
+                                    const statusClass = exerciseMatches ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-red-500/40 bg-red-500/5';
+                                    const statusTextClass = exerciseMatches ? 'text-emerald-300' : 'text-red-300';
+
+                                    return (
+                                        <div key={exercise.name} className={`rounded-xl border p-4 ${statusClass}`}>
+                                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                                <h4 className="text-sm font-bold text-white">{exercise.name}</h4>
+                                                <span className={`text-[10px] font-mono uppercase ${statusTextClass}`}>
+                                                    {exerciseMatches ? 'On plan' : 'Needs attention'}
+                                                </span>
+                                            </div>
+                                            <div className="mb-3 grid grid-cols-2 gap-3 text-xs font-mono sm:grid-cols-3">
+                                                <div><span className="block text-[10px] text-gray-500">PLANNED SETS</span><span className="text-gray-300">{plannedSets}</span></div>
+                                                <div><span className="block text-[10px] text-gray-500">COMPLETED SETS</span><span className="text-gray-300">{completedSets}</span></div>
+                                                <div><span className="block text-[10px] text-gray-500">REPS</span><span className="text-gray-300">Plan vs actual</span></div>
+                                            </div>
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full min-w-[360px] text-left text-xs font-mono">
+                                                    <thead>
+                                                        <tr className="border-b border-gray-700 text-[10px] text-gray-500">
+                                                            <th className="pb-2">SET</th>
+                                                            <th className="pb-2">PLANNED REPS</th>
+                                                            <th className="pb-2">ACTUAL REPS</th>
+                                                            <th className="pb-2">STATUS</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-800/70">
+                                                        {exercise.sets.map((set) => {
+                                                            const matchesPlan = set.actual === set.target;
+                                                            return (
+                                                                <tr key={set.set} className={matchesPlan ? 'text-emerald-300' : 'text-red-300'}>
+                                                                    <td className="py-2">{set.set}</td>
+                                                                    <td className="py-2">{set.target}</td>
+                                                                    <td className="py-2">{set.actual ?? 'Not completed'}</td>
+                                                                    <td className="py-2">{matchesPlan ? 'Match' : 'Mismatch'}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

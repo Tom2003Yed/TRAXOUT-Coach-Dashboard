@@ -26,6 +26,34 @@ const getRatingHistory = (score, range) => {
     }));
 };
 
+const getAiFeedback = (trainee) => {
+    const seed = [...trainee.name].reduce((total, character, index) => total + character.charCodeAt(0) * (index + 1), trainee.age);
+    const tier = trainee.tier.split('•')[0].trim().toLowerCase();
+    const focusAreas = ['lower back and calves', 'upper-back pulling volume', 'posterior-chain strength', 'shoulder stability work', 'single-leg strength', 'ankle and hip mobility', 'trunk control under fatigue'];
+    const strengths = ['core exercises', 'conditioning sessions', 'compound movements', 'mobility work', 'lower-body training', 'technical repetitions', 'sport-specific drills'];
+    const recoveryAdvice = ['Add one lighter recovery session before the next hard block.', 'Keep high-intensity days separated by at least one controlled session.', 'Track sleep and perceived exertion alongside the next week of training.', 'A gradual load increase will be more useful than another maximal session.'];
+    const focusArea = focusAreas[seed % focusAreas.length];
+    const strength = strengths[(seed + trainee.score) % strengths.length];
+    const consistency = trainee.score >= 90 ? 'exceptional consistency' : trainee.score >= 85 ? 'strong consistency' : 'steady progress';
+    const count = 2 + (seed % 4);
+    const feedbackPool = [
+        `${trainee.name} needs more focused work on ${focusArea}.`,
+        `${trainee.name} is building ${consistency} through ${strength}.`,
+        `The ${tier} profile would benefit from one measurable progression target before the next review.`,
+        `At age ${trainee.age}, ${trainee.name} should prioritize movement quality before adding another layer of volume.`,
+        trainee.gender === 'M' ? `${trainee.name}'s current load suits a gradual strength increase rather than a sudden jump.` : `${trainee.name}'s current load suits a controlled volume increase with recovery days protected.`,
+        trainee.status === 'CRITICAL' ? `${trainee.name} needs recovery monitored closely after demanding sessions.` : trainee.status === 'AT RISK' ? `${trainee.name} would benefit from a more consistent recovery routine.` : `${trainee.name} is managing training stress well at the moment.`,
+        `${trainee.name}'s ${trainee.score}/100 score supports keeping the current strengths while addressing the weakest movement pattern.`,
+        recoveryAdvice[(seed + trainee.age) % recoveryAdvice.length]
+    ];
+
+    return feedbackPool
+        .map((feedback, index) => ({ feedback, order: (seed + index * 17) % feedbackPool.length }))
+        .sort((first, second) => first.order - second.order)
+        .slice(0, count)
+        .map(({ feedback }) => feedback);
+};
+
 function TraineesView() {
     const location = useLocation();
     const { trainees, updateTraineeStatus } = useContext(AppContext);
@@ -244,6 +272,23 @@ function TraineesView() {
                             >
                                 Click to view chart
                             </button>
+                        </div>
+                    </div>
+
+                    <div className="mb-6 rounded-2xl border border-cyan-500/20 bg-[#12191d] p-5 shadow-[0_0_24px_rgba(34,211,238,0.06)]">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">AI Coach Feedback</p>
+                                <h3 className="mt-1 text-sm font-bold text-white">{selectedTrainee.name}'s performance snapshot</h3>
+                            </div>
+                            <span className="rounded border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[9px] font-mono uppercase text-cyan-300">Analytics based</span>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2">
+                            {getAiFeedback(selectedTrainee).map((feedback) => (
+                                <p key={feedback} className="rounded-lg border border-gray-800/80 bg-[#181b20] px-3 py-2 text-xs leading-relaxed text-gray-300">
+                                    {feedback}
+                                </p>
+                            ))}
                         </div>
                     </div>
 

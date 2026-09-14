@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TopHeader from '../bars/TopHeader';
 import { trainees } from '../../data/trainees';
+import frontMusclesDiagram from '../../assets/front-muscles-diagram.svg';
+import backMusclesDiagram from '../../assets/back-muscles-diagram.svg';
 
 const ageOptions = [
     { value: 'ALL', label: 'All ages' },
@@ -10,6 +13,33 @@ const ageOptions = [
 ];
 
 const defaultFilters = { gender: 'ALL', ageRange: 'ALL' };
+
+const exerciseCatalog = [
+    ['Barbell Bench Press', 'Chest', 'benchpress,gym', 24],
+    ['Lat Pulldown', 'Back', 'latpulldown,gym', 20],
+    ['Incline Dumbbell Press', 'Chest', 'dumbbell,press,gym', 18],
+    ['Barbell Squat', 'Legs', 'barbell,squat,gym', 15],
+    ['Dumbbell Bicep Curl', 'Arms', 'bicep,curl,gym', 12],
+    ['Dumbbell Lunge', 'Legs', 'lunge,dumbbell,gym', 11],
+    ['Deadlift', 'Back & Legs', 'deadlift,gym', 10],
+    ['Romanian Deadlift', 'Hamstrings', 'romanian,deadlift,gym', 9],
+    ['Overhead Press', 'Shoulders', 'overhead,press,gym', 8],
+    ['Cable Row', 'Back', 'cable,row,gym', 7],
+    ['Hip Thrust', 'Glutes', 'hip,thrust,gym', 6],
+    ['Pull-up', 'Back', 'pullup,gym', 5],
+    ['Power Clean', 'Full Body', 'power,clean,gym', 4],
+    ['Walking Lunges', 'Legs', 'walking,lunge,gym', 3],
+    ['Box Jumps', 'Power', 'box,jump,gym', 2],
+    ['Plank Hold', 'Core', 'plank,gym', 1]
+].map(([name, category, search, usage]) => ({
+    name,
+    category,
+    usage,
+    image: `https://loremflickr.com/320/220/${search}?lock=${usage}`
+}));
+
+const yearOptions = ['ALL', '2026', '2025'];
+const monthOptions = ['ALL', 'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
 const filterTrainees = (filters) => trainees.filter((trainee) => {
     const matchesGender = filters.gender === 'ALL' || trainee.gender === filters.gender;
@@ -22,6 +52,271 @@ const filterTrainees = (filters) => trainees.filter((trainee) => {
 const average = (values) => values.length
     ? values.reduce((total, value) => total + value, 0) / values.length
     : 0;
+
+const getExerciseUsage = (traineeGroup, timeFilters) => {
+    const groupRatio = traineeGroup.length / trainees.length;
+    const yearRatio = timeFilters.year === 'ALL' ? 1 : timeFilters.year === '2026' ? 0.7 : 0.3;
+    const monthIndex = timeFilters.month === 'ALL' ? -1 : monthOptions.indexOf(timeFilters.month) - 1;
+    const exercises = exerciseCatalog.map((exercise, index) => ({
+        ...exercise,
+        sets: Math.max(1, Math.round(exercise.usage * (0.8 + groupRatio) * yearRatio * (
+            monthIndex === -1 ? 1 : 0.72 + (((index * 3 + monthIndex * 5) % 9) * 0.06)
+        ) + (index % 3)))
+    }));
+    const totalSets = exercises.reduce((total, exercise) => total + exercise.sets, 0);
+
+    return exercises
+        .sort((first, second) => second.sets - first.sets)
+        .map((exercise, index) => ({
+            ...exercise,
+            rank: index + 1,
+            percentage: Math.round((exercise.sets / totalSets) * 100)
+        }));
+};
+
+const aggregateMuscleCatalog = [
+    ['Pectoralis Major', '#69cbd5'],
+    ['Latissimus Dorsi', '#70b9dc'],
+    ['Anterior Deltoids', '#9da3e2'],
+    ['Triceps Brachii', '#b99cdd'],
+    ['Biceps Brachii', '#e2b66b'],
+    ['Quadriceps', '#72c6b3'],
+    ['Gluteus Maximus', '#dc91a4'],
+    ['Hamstrings', '#e0a0ad'],
+    ['Core', '#dfc76c'],
+    ['Erector Spinae', '#969ddd']
+];
+
+const getTraineeMuscleSeed = (trainee, year, month) => {
+    const monthIndex = month === 'ALL' ? 0 : monthOptions.indexOf(month);
+    return trainee.id.split('').reduce((total, character) => total + character.charCodeAt(0), trainee.age * 13)
+        + Number(year === 'ALL' ? 2026 : year) * 7
+        + monthIndex * 29;
+};
+
+const getAverageMuscleDistribution = (traineeGroup, timeFilters) => {
+    if (!traineeGroup.length) return [];
+
+    const totals = aggregateMuscleCatalog.map(([name, color], muscleIndex) => ({ name, color, value: 0 }));
+    traineeGroup.forEach((trainee) => {
+        const seed = getTraineeMuscleSeed(trainee, timeFilters.year, timeFilters.month);
+        totals.forEach((muscle, muscleIndex) => {
+            muscle.value += 8 + ((seed + muscleIndex * 17) % 42);
+        });
+    });
+
+    const totalValue = totals.reduce((total, muscle) => total + muscle.value, 0);
+    return totals.map((muscle) => ({
+        ...muscle,
+        percentage: Math.round((muscle.value / totalValue) * 100)
+    }));
+};
+
+const polarToCartesian = (center, radius, angle) => {
+    const angleInRadians = ((angle - 90) * Math.PI) / 180;
+    return {
+        x: center + radius * Math.cos(angleInRadians),
+        y: center + radius * Math.sin(angleInRadians)
+    };
+};
+
+const describePieSlice = (startAngle, endAngle) => {
+    const start = polarToCartesian(100, 82, endAngle);
+    const end = polarToCartesian(100, 82, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+    return `M 100 100 L ${start.x} ${start.y} A 82 82 0 ${largeArcFlag} 0 ${end.x} ${end.y} Z`;
+};
+
+const getTeamAiInsights = (traineeGroup, filters) => {
+    if (!traineeGroup.length) return ['No trainees match the selected filters.'];
+
+    const averageScore = Math.round(average(traineeGroup.map((trainee) => trainee.score)));
+    const activeRate = Math.round((traineeGroup.filter((trainee) => trainee.status === 'ACTIVE').length / traineeGroup.length) * 100);
+    const muscleData = getAverageMuscleDistribution(traineeGroup, filters);
+    const topMuscle = [...muscleData].sort((first, second) => second.percentage - first.percentage)[0];
+    const exerciseData = getExerciseUsage(traineeGroup, filters);
+    const topExercise = exerciseData[0];
+    const filterLabel = [
+        filters.gender === 'ALL' ? 'all genders' : filters.gender === 'M' ? 'male trainees' : 'female trainees',
+        filters.ageRange === 'ALL' ? 'all age groups' : `${filters.ageRange} years`,
+        filters.year === 'ALL' ? 'all years' : filters.year,
+        filters.month === 'ALL' ? 'all months' : filters.month.toLowerCase()
+    ].join(' / ');
+
+    return [
+        `${traineeGroup.length} trainees match the current view: ${filterLabel}.`,
+        `The group averages ${averageScore}/100, with ${activeRate}% currently marked active.`,
+        `${topMuscle.name} is the leading target area at ${topMuscle.percentage}% of average volume.`,
+        `${topExercise.name} leads exercise usage at ${topExercise.percentage}% for this filtered group.`
+    ];
+};
+
+function TeamAiInsights({ traineeGroup, filters }) {
+    return (
+        <div className="rounded-2xl border border-cyan-500/20 bg-[#12191d] p-6 shadow-[0_0_24px_rgba(34,211,238,0.06)]">
+            <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-400">AI Team Insights</p>
+                    <h3 className="mt-1 text-lg font-bold text-white">Aggregate analytics snapshot</h3>
+                </div>
+                <span className="rounded border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 text-[9px] font-mono uppercase text-cyan-300">Filter based</span>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+                {getTeamAiInsights(traineeGroup, filters).map((insight) => (
+                    <p key={insight} className="rounded-lg border border-gray-800/80 bg-[#181b20] px-3 py-2.5 text-xs leading-relaxed text-gray-300">
+                        {insight}
+                    </p>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function AggregateMuscleBody({ view, activeMuscle }) {
+    return (
+        <img
+            src={view === 'front' ? frontMusclesDiagram : backMusclesDiagram}
+            alt={`${view === 'front' ? 'Front' : 'Back'} aggregate muscle diagram`}
+            className="h-72 w-full object-contain"
+        />
+    );
+}
+/*
+    const isActive = (names) => names.includes(activeMuscle);
+    const baseClass = 'fill-[#27343b] stroke-[#52636c] stroke-[1.2]';
+    const activeClass = 'fill-red-500 stroke-red-200';
+
+    return (
+        <svg viewBox="0 0 180 360" className="h-72 w-full" role="img" aria-label={`${view} aggregate muscle map`}>
+            <g className="fill-[#1b252a] stroke-[#52636c] stroke-[1.5]">
+                <circle cx="90" cy="27" r="18" />
+                <path d="M83 43 L97 43 L101 56 L79 56 Z" />
+                <path d="M79 55 C71 57 65 64 61 72 L70 119 C73 132 77 142 79 153 L90 169 L101 153 C103 142 107 132 110 119 L119 72 C115 64 109 57 101 55 L96 62 L84 62 Z" />
+                <path d="M62 68 C56 69 52 73 50 80 L48 145 C48 151 51 155 55 155 C59 155 61 151 61 146 L65 91 Z" />
+                <path d="M118 68 C124 69 128 73 130 80 L132 145 C132 151 129 155 125 155 C121 155 119 151 119 146 L115 91 Z" />
+                <path d="M79 145 C75 158 71 176 70 195 L64 246 L57 321 C57 326 61 329 67 329 L72 326 L83 253 L90 190 L97 253 L108 326 L113 329 C119 329 123 326 123 321 L116 246 L110 195 C109 176 105 158 101 145 L90 169 Z" />
+                <path d="M57 321 L52 329 L71 329 L72 326 Z" />
+                <path d="M123 321 L128 329 L109 329 L108 326 Z" />
+            </g>
+            {view === 'front' ? (
+                <g>
+                    <path className={`${baseClass} ${isActive(['Pectoralis Major']) ? activeClass : ''}`} d="M69 76 C75 68 84 68 89 76 L88 105 C79 108 70 104 64 96 Z" />
+                    <path className={`${baseClass} ${isActive(['Pectoralis Major']) ? activeClass : ''}`} d="M91 76 C96 68 105 68 111 76 L116 96 C110 104 101 108 92 105 Z" />
+                    <path className={`${baseClass} ${isActive(['Anterior Deltoids']) ? activeClass : ''}`} d="M58 76 C61 70 65 68 70 72 L68 91 L57 94 L53 86 Z" />
+                    <path className={`${baseClass} ${isActive(['Anterior Deltoids']) ? activeClass : ''}`} d="M122 76 C119 70 115 68 110 72 L112 91 L123 94 L127 86 Z" />
+                    <path className={`${baseClass} ${isActive(['Biceps Brachii']) ? activeClass : ''}`} d="M57 91 L68 89 L67 126 L64 145 L55 145 Z" />
+                    <path className={`${baseClass} ${isActive(['Biceps Brachii']) ? activeClass : ''}`} d="M123 91 L112 89 L113 126 L116 145 L125 145 Z" />
+                    <path className={`${baseClass} ${isActive(['Triceps Brachii']) ? activeClass : ''}`} d="M53 91 L57 94 L55 145 L53 156 L49 145 Z" />
+                    <path className={`${baseClass} ${isActive(['Triceps Brachii']) ? activeClass : ''}`} d="M127 91 L123 94 L125 145 L127 156 L131 145 Z" />
+                    <path className={`${baseClass} ${isActive(['Core']) ? activeClass : ''}`} d="M78 106 L90 110 L102 106 L105 145 L90 169 L75 145 Z" />
+                    <path className={`${baseClass} ${isActive(['Quadriceps']) ? activeClass : ''}`} d="M72 166 L88 174 L83 253 L70 285 L64 246 Z" />
+                    <path className={`${baseClass} ${isActive(['Quadriceps']) ? activeClass : ''}`} d="M108 166 L92 174 L97 253 L110 285 L116 246 Z" />
+                </g>
+            ) : (
+                <g>
+                    <path className={`${baseClass} ${isActive(['Latissimus Dorsi']) ? activeClass : ''}`} d="M68 76 L88 70 L86 132 L72 151 L64 121 Z" />
+                    <path className={`${baseClass} ${isActive(['Latissimus Dorsi']) ? activeClass : ''}`} d="M112 76 L92 70 L94 132 L108 151 L116 121 Z" />
+                    <path className={`${baseClass} ${isActive(['Trapezius']) ? activeClass : ''}`} d="M78 62 L90 70 L102 62 L108 82 L90 103 L72 82 Z" />
+                    <path className={`${baseClass} ${isActive(['Rhomboids']) ? activeClass : ''}`} d="M84 82 L90 76 L96 82 L94 116 L90 125 L86 116 Z" />
+                    <path className={`${baseClass} ${isActive(['Erector Spinae']) ? activeClass : ''}`} d="M78 116 L86 122 L86 166 L78 151 Z" />
+                    <path className={`${baseClass} ${isActive(['Erector Spinae']) ? activeClass : ''}`} d="M102 116 L94 122 L94 166 L102 151 Z" />
+                    <path className={`${baseClass} ${isActive(['Rear Deltoids']) ? activeClass : ''}`} d="M58 76 L70 72 L68 96 L56 100 L52 88 Z" />
+                    <path className={`${baseClass} ${isActive(['Rear Deltoids']) ? activeClass : ''}`} d="M122 76 L110 72 L112 96 L124 100 L128 88 Z" />
+                    <path className={`${baseClass} ${isActive(['Gluteus Maximus']) ? activeClass : ''}`} d="M70 151 L90 160 L110 151 L113 194 L90 207 L67 194 Z" />
+                    <path className={`${baseClass} ${isActive(['Hamstrings']) ? activeClass : ''}`} d="M68 195 L87 203 L82 263 L69 285 L64 246 Z" />
+                    <path className={`${baseClass} ${isActive(['Hamstrings']) ? activeClass : ''}`} d="M112 195 L93 203 L98 263 L111 285 L116 246 Z" />
+                </g>
+            )}
+        </svg>
+    );
+}
+*/
+
+function AggregateMuscleCard({ traineeGroup, filters, onChange }) {
+    const distribution = getAverageMuscleDistribution(traineeGroup, filters);
+    const [activeMuscle, setActiveMuscle] = useState(null);
+    let startAngle = 0;
+    const genderSelectStyle = filters.gender === 'ALL'
+        ? {
+            backgroundImage: 'linear-gradient(135deg, rgba(59, 130, 246, 0.28), rgba(236, 72, 153, 0.28))',
+            borderColor: 'rgba(125, 211, 252, 0.6)',
+            color: '#e0f2fe'
+        }
+        : filters.gender === 'M'
+            ? {
+                backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                borderColor: 'rgba(96, 165, 250, 0.65)',
+                color: '#93c5fd'
+            }
+            : {
+                backgroundColor: 'rgba(219, 39, 119, 0.2)',
+                borderColor: 'rgba(244, 114, 182, 0.65)',
+                color: '#f9a8d4'
+            };
+
+    return (
+        <div className="lg:col-span-2 rounded-2xl border border-gray-800/80 bg-[#121418] p-6 shadow-xl">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-400">Team Muscle Analytics</p>
+                    <h3 className="mt-1 text-xl font-bold text-white">Average Targeted Muscles Distribution</h3>
+                    <p className="mt-1 text-xs font-mono text-gray-500">Average across {traineeGroup.length} matched trainees</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <select value={filters.gender} onChange={(event) => onChange({ ...filters, gender: event.target.value })} style={genderSelectStyle} className="rounded-lg border px-2 py-2 text-[10px] font-mono outline-none transition-colors focus:ring-1 focus:ring-cyan-400/50" aria-label="Filter team muscles by gender">
+                        <option value="ALL" style={{ backgroundColor: '#181b20', color: '#e0f2fe' }}>Gender: All</option>
+                        <option value="M" style={{ backgroundColor: '#172554', color: '#bfdbfe' }}>Gender: Male</option>
+                        <option value="F" style={{ backgroundColor: '#500724', color: '#fbcfe8' }}>Gender: Female</option>
+                    </select>
+                    <select value={filters.ageRange} onChange={(event) => onChange({ ...filters, ageRange: event.target.value })} className="rounded-lg border border-gray-700 bg-[#181b20] px-2 py-2 text-[10px] font-mono text-gray-300 outline-none focus:border-cyan-400" aria-label="Filter team muscles by age">
+                        {ageOptions.map((option) => <option key={option.value} value={option.value}>Age: {option.label}</option>)}
+                    </select>
+                    <select value={filters.year} onChange={(event) => onChange({ ...filters, year: event.target.value })} className="rounded-lg border border-gray-700 bg-[#181b20] px-2 py-2 text-[10px] font-mono text-gray-300 outline-none focus:border-cyan-400" aria-label="Filter team muscles by year">
+                        {yearOptions.map((year) => <option key={year} value={year}>Year: {year === 'ALL' ? 'All years' : year}</option>)}
+                    </select>
+                    <select value={filters.month} onChange={(event) => onChange({ ...filters, month: event.target.value })} className="rounded-lg border border-gray-700 bg-[#181b20] px-2 py-2 text-[10px] font-mono text-gray-300 outline-none focus:border-cyan-400" aria-label="Filter team muscles by month">
+                        {monthOptions.map((month) => <option key={month} value={month}>Month: {month === 'ALL' ? 'All months' : month[0] + month.slice(1).toLowerCase()}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            {distribution.length ? (
+                <>
+                    <div className="mt-6 grid items-center gap-8 md:grid-cols-[minmax(280px,390px)_minmax(0,1fr)]">
+                        <div className="mx-auto h-[330px] w-[330px] max-w-full">
+                            <svg viewBox="0 0 200 200" className="h-full w-full" role="img" aria-label="Average targeted muscle distribution pie chart">
+                                {distribution.map((muscle) => {
+                                    const endAngle = startAngle + (muscle.percentage / 100) * 360;
+                                    const path = describePieSlice(startAngle, endAngle);
+                                    startAngle = endAngle;
+                                    return <path key={muscle.name} d={path} fill={muscle.color} className="cursor-pointer stroke-[#121418] stroke-2 transition-opacity" opacity={activeMuscle && activeMuscle !== muscle.name ? 0.35 : 1} onMouseEnter={() => setActiveMuscle(muscle.name)} onMouseLeave={() => setActiveMuscle(null)} />;
+                                })}
+                            </svg>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            {distribution.map((muscle) => (
+                                <div key={muscle.name} className={`flex items-center justify-between gap-3 rounded-lg border border-gray-800/70 bg-[#181b20] px-3 py-2.5 transition-colors ${activeMuscle === muscle.name ? 'bg-cyan-500/10 text-white' : ''}`} onMouseEnter={() => setActiveMuscle(muscle.name)} onMouseLeave={() => setActiveMuscle(null)}>
+                                    <span className="flex min-w-0 items-center gap-2 text-xs font-mono text-gray-300"><span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: muscle.color }} /><span className="truncate">{muscle.name}</span></span>
+                                    <span className="shrink-0 text-xs font-mono text-cyan-300">{muscle.percentage}%</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 border-t border-gray-800/80 pt-5">
+                        {['front', 'back'].map((view) => (
+                            <div key={view} className="rounded-xl border border-gray-800 bg-[#0d1013] p-3">
+                                <p className="mb-2 text-center text-[10px] font-mono uppercase tracking-widest text-gray-500">{view} view</p>
+                                <AggregateMuscleBody view={view} activeMuscle={activeMuscle} />
+                            </div>
+                        ))}
+                    </div>
+                </>
+            ) : (
+                <p className="mt-8 rounded-xl border border-dashed border-gray-700 p-8 text-center text-xs font-mono text-gray-500">No trainees match the selected filters.</p>
+            )}
+        </div>
+    );
+}
 
 function CardFilters({ filters, onChange }) {
     const genderSelectStyle = filters.gender === 'ALL'
@@ -67,7 +362,33 @@ function CardFilters({ filters, onChange }) {
     );
 }
 
+function ExerciseList({ title, exercises, accent = 'cyan' }) {
+    const rankColor = accent === 'amber' ? 'text-amber-400' : 'text-cyan-400';
+
+    return (
+        <div>
+            <h4 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">{title}</h4>
+            <div className="space-y-2.5">
+                {exercises.map((exercise, index) => (
+                    <div key={exercise.name} className="flex items-center justify-between gap-3 rounded-xl border border-gray-800/50 bg-[#181b20] p-2.5">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <img src={exercise.image} alt={`${exercise.name} exercise`} className="h-10 w-10 shrink-0 rounded-lg border border-gray-700 object-cover" />
+                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded bg-gray-800 font-mono text-[10px] font-bold ${rankColor}`}>#{index + 1}</span>
+                            <div className="min-w-0">
+                                <span className="block truncate text-xs font-semibold text-gray-200">{exercise.name}</span>
+                                <span className="font-mono text-[10px] text-gray-500">{exercise.category}</span>
+                            </div>
+                        </div>
+                        <span className="shrink-0 rounded border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 font-mono text-[10px] text-cyan-400">{exercise.percentage}%</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function AllTraineesView() {
+    const navigate = useNavigate();
     const [cardFilters, setCardFilters] = useState({
         rating: defaultFilters,
         duration: defaultFilters,
@@ -75,19 +396,24 @@ function AllTraineesView() {
         efficacy: defaultFilters,
         leaderboard: defaultFilters
     });
+    const [allExercisesFilters, setAllExercisesFilters] = useState({ ...defaultFilters, year: 'ALL', month: 'ALL' });
+    const [aggregateMuscleFilters, setAggregateMuscleFilters] = useState({ ...defaultFilters, year: '2026', month: 'ALL' });
+    const [isAllExercisesOpen, setIsAllExercisesOpen] = useState(false);
     const updateCardFilters = (card, filters) => setCardFilters((current) => ({ ...current, [card]: filters }));
     const ratingGroup = filterTrainees(cardFilters.rating);
     const durationGroup = filterTrainees(cardFilters.duration);
     const adherenceGroup = filterTrainees(cardFilters.adherence);
     const efficacyGroup = filterTrainees(cardFilters.efficacy);
     const leaderboardGroup = filterTrainees(cardFilters.leaderboard);
+    const aggregateMuscleGroup = filterTrainees(aggregateMuscleFilters);
     const rating = (average(ratingGroup.map((trainee) => trainee.score)) / 20).toFixed(1);
     const duration = Math.round(35 + average(durationGroup.map((trainee) => trainee.score)) / 2);
     const adherence = adherenceGroup.length ? Math.round((adherenceGroup.filter((trainee) => trainee.status === 'ACTIVE').length / adherenceGroup.length) * 100) : 0;
-    const efficacyBars = ['SQUAT', 'DEADLIFT', 'BENCH', 'CURL', 'CALF'].map((name, index) => ({
-        name,
-        value: `${Math.max(12, Math.min(96, Math.round(35 + average(efficacyGroup.map((trainee) => trainee.score)) / 2 + index * 5)))}%`
-    }));
+    const exerciseUsage = getExerciseUsage(efficacyGroup, { year: 'ALL', month: 'ALL' });
+    const allExercisesGroup = filterTrainees(allExercisesFilters);
+    const allExercisesUsage = getExerciseUsage(allExercisesGroup, allExercisesFilters);
+    const topExercises = exerciseUsage.slice(0, 5);
+    const bottomExercises = [...exerciseUsage].reverse().slice(0, 5);
     const leaderboard = [...leaderboardGroup].sort((first, second) => second.score - first.score).slice(0, 3);
 
     return (
@@ -138,6 +464,15 @@ function AllTraineesView() {
                 </div>
             </div>
 
+            <div className="mb-8 grid grid-cols-1 gap-6">
+                <TeamAiInsights traineeGroup={aggregateMuscleGroup} filters={aggregateMuscleFilters} />
+                <AggregateMuscleCard
+                    traineeGroup={aggregateMuscleGroup}
+                    filters={aggregateMuscleFilters}
+                    onChange={setAggregateMuscleFilters}
+                />
+            </div>
+
             {/* Exercise Efficacy & Global Leaderboards */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-[#121418] border border-gray-800/80 rounded-2xl p-6 shadow-xl">
@@ -148,17 +483,16 @@ function AllTraineesView() {
                         </div>
                         <span className="text-[10px] font-mono text-gray-500">{efficacyGroup.length} trainees matched</span>
                     </div>
-                    <CardFilters filters={cardFilters.efficacy} onChange={(filters) => updateCardFilters('efficacy', filters)} />
-
-                    {/* Chart Mock Visual */}
-                    <div className="h-48 flex items-end justify-between gap-4 pt-8 px-4 border-b border-gray-800/80 pb-4">
-                        {efficacyBars.map((bar, idx) => (
-                            <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                                <div className="w-full bg-cyan-500/20 hover:bg-cyan-500/40 rounded-t-lg transition-all" style={{ height: bar.value }}></div>
-                                <span className="text-[10px] font-mono text-gray-500">{bar.name}</span>
-                            </div>
-                        ))}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <CardFilters filters={cardFilters.efficacy} onChange={(filters) => updateCardFilters('efficacy', filters)} />
                     </div>
+                    <div className="mt-5 grid grid-cols-1 gap-6 border-b border-gray-800/80 pb-5 xl:grid-cols-2">
+                        <ExerciseList title="Top 5 Exercises (By Usage)" exercises={topExercises} />
+                        <ExerciseList title="Bottom 5 Exercises (By Usage)" exercises={bottomExercises} accent="amber" />
+                    </div>
+                    <button onClick={() => setIsAllExercisesOpen(true)} className="mt-4 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 font-mono text-[10px] text-cyan-300 transition-colors hover:bg-cyan-500/20">
+                        All Exercises
+                    </button>
                 </div>
 
                 <div className="bg-[#121418] border border-gray-800/80 rounded-2xl p-6 shadow-xl">
@@ -166,8 +500,19 @@ function AllTraineesView() {
                     <CardFilters filters={cardFilters.leaderboard} onChange={(filters) => updateCardFilters('leaderboard', filters)} />
                     <div className="space-y-3">
                         {leaderboard.map((user, index) => (
-                            <div key={user.id} className="p-3 bg-[#181b20] rounded-xl border border-gray-800/50 flex items-center justify-between">
+                            <button
+                                key={user.id}
+                                type="button"
+                                onClick={() => navigate('/trainees', { state: { trainee: user } })}
+                                className="w-full p-3 bg-[#181b20] rounded-xl border border-gray-800/50 flex items-center justify-between text-left transition-colors hover:border-cyan-500/50 hover:bg-[#1c2228] focus:outline-none focus:ring-1 focus:ring-cyan-400/60"
+                                aria-label={`Open profile for ${user.name}`}
+                            >
                                 <div className="flex items-center gap-3">
+                                    <img
+                                        src={user.image}
+                                        alt={`${user.name} profile`}
+                                        className="h-10 w-10 shrink-0 rounded-full border border-gray-700 object-cover"
+                                    />
                                     <span className="text-xs font-mono font-bold text-cyan-400">{String(index + 1).padStart(2, '0')}</span>
                                     <div>
                                         <div className="text-xs font-bold text-white">{user.name}</div>
@@ -175,12 +520,46 @@ function AllTraineesView() {
                                     </div>
                                 </div>
                                 <span className="text-sm font-black font-mono text-white">{user.score}</span>
-                            </div>
+                            </button>
                         ))}
                         {!leaderboard.length && <p className="text-xs font-mono text-gray-500">No trainees match these filters.</p>}
                     </div>
                 </div>
             </div>
+
+            {isAllExercisesOpen && (
+                <div role="dialog" aria-modal="true" aria-label="All exercises usage" onClick={() => setIsAllExercisesOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+                    <div onClick={(event) => event.stopPropagation()} className="w-full max-w-4xl rounded-2xl border border-cyan-500/30 bg-[#12191d] p-5 shadow-[0_0_40px_rgba(34,211,238,0.12)]">
+                        <div className="mb-5 flex items-start justify-between gap-4">
+                            <div>
+                                <p className="font-mono text-[10px] uppercase tracking-widest text-cyan-400">Exercise Usage</p>
+                                <h3 className="mt-1 text-xl font-bold text-white">All Exercises</h3>
+                            </div>
+                            <button onClick={() => setIsAllExercisesOpen(false)} aria-label="Close all exercises" className="h-8 w-8 rounded-lg border border-gray-700 text-gray-400 hover:border-cyan-400 hover:text-white">×</button>
+                        </div>
+                        <div className="mb-5 flex flex-wrap items-center gap-2">
+                            <CardFilters filters={allExercisesFilters} onChange={(filters) => setAllExercisesFilters((current) => ({ ...current, ...filters }))} />
+                            <select value={allExercisesFilters.year} onChange={(event) => setAllExercisesFilters((current) => ({ ...current, year: event.target.value }))} className="mt-4 rounded border border-gray-800 bg-[#181b20] px-2 py-1 font-mono text-[10px] text-gray-400 outline-none focus:border-cyan-500/50" aria-label="Filter all exercises by year">
+                                {yearOptions.map((year) => <option key={year} value={year}>Year: {year === 'ALL' ? 'All years' : year}</option>)}
+                            </select>
+                            <select value={allExercisesFilters.month} onChange={(event) => setAllExercisesFilters((current) => ({ ...current, month: event.target.value }))} className="mt-4 rounded border border-gray-800 bg-[#181b20] px-2 py-1 font-mono text-[10px] text-gray-400 outline-none focus:border-cyan-500/50" aria-label="Filter all exercises by month">
+                                {monthOptions.map((month) => <option key={month} value={month}>Month: {month === 'ALL' ? 'All months' : month[0] + month.slice(1).toLowerCase()}</option>)}
+                            </select>
+                        </div>
+                        <div className="grid max-h-[65vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                            {allExercisesUsage.map((exercise) => (
+                                <div key={exercise.name} className="flex items-center justify-between gap-3 rounded-xl border border-gray-800/50 bg-[#181b20] p-2.5">
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <img src={exercise.image} alt={`${exercise.name} exercise`} className="h-10 w-10 shrink-0 rounded-lg border border-gray-700 object-cover" />
+                                        <div className="min-w-0"><span className="block truncate text-xs font-semibold text-gray-200">{exercise.name}</span><span className="font-mono text-[10px] text-gray-500">{exercise.category}</span></div>
+                                    </div>
+                                    <span className="shrink-0 rounded border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 font-mono text-[10px] text-cyan-400">{exercise.percentage}%</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

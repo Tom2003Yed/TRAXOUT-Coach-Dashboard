@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import TopHeader from '../bars/TopHeader';
 import TraineeHistory from '../trainee/TraineeHistory';
 import TraineeAnalytics from '../trainee/TraineeAnalytics';
+import TrainingPlan from '../trainee/TrainingPlan';
 import { AppContext } from '../../AppContext';
 
 const ratingRanges = {
@@ -312,13 +313,24 @@ function TraineesView() {
                         >
                             Training History
                         </button>
+                        <button
+                            onClick={() => setActiveTab('plan')}
+                            className={`px-5 py-2 rounded-lg text-xs font-mono font-semibold ${activeTab === 'plan'
+                                ? 'bg-cyan-300 text-[#071014]'
+                                : 'bg-[#181b20] text-gray-400 border border-gray-800'
+                                }`}
+                        >
+                            Training Plan
+                        </button>
                     </div>
 
                     {/* Active View Display */}
                     {activeTab === 'history' ? (
                         <TraineeHistory profile={selectedTrainee} />
+                    ) : activeTab === 'analytics' ? (
+                        <TraineeAnalytics traineeName={selectedTrainee.name} points={selectedTrainee.points} />
                     ) : (
-                        <TraineeAnalytics traineeName={selectedTrainee.name} />
+                        <TrainingPlan profile={selectedTrainee} />
                     )}
                 </main>
             </div>

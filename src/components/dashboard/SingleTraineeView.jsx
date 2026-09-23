@@ -2,11 +2,13 @@ import React, { useContext, useState } from 'react';
 import Sidebar from '../bars/Sidebar';
 import TraineeHistory from '../trainee/TraineeHistory';
 import TraineeAnalytics from '../trainee/TraineeAnalytics';
+import TrainingPlan from '../trainee/TrainingPlan';
 import { AppContext } from '../../AppContext';
 
 function SingleTraineeView() {
     const [activeTab, setActiveTab] = useState('history');
-    const { selectedTraineeId } = useContext(AppContext);
+    const { selectedTraineeId, trainees } = useContext(AppContext);
+    const selectedTrainee = trainees?.find((trainee) => trainee.id === selectedTraineeId);
 
     const getBtnClass = (tabName) =>
         `px-5 py-2.5 rounded-xl font-mono text-xs font-semibold tracking-wider transition-all duration-200 uppercase border ${
@@ -47,6 +49,13 @@ function SingleTraineeView() {
                                 >
                                     Trainee Analytics
                                 </button>
+
+                                <button
+                                    onClick={() => setActiveTab('plan')}
+                                    className={getBtnClass('plan')}
+                                >
+                                    Training Plan
+                                </button>
                             </div>
 
                             <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full hidden sm:inline-block">
@@ -55,8 +64,9 @@ function SingleTraineeView() {
                         </div>
 
                         <div className="flex-1">
-                            {activeTab === 'history' && <TraineeHistory />}
-                            {activeTab === 'analytics' && <TraineeAnalytics />}
+                            {activeTab === 'history' && <TraineeHistory profile={selectedTrainee} />}
+                            {activeTab === 'analytics' && <TraineeAnalytics traineeName={selectedTrainee?.name} points={selectedTrainee?.points} />}
+                            {activeTab === 'plan' && <TrainingPlan profile={selectedTrainee} />}
                         </div>
                     </div>
                 )}

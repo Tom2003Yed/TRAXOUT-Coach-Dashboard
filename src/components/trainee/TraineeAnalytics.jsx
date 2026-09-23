@@ -17,9 +17,16 @@ const getStreakHistory = (streakDays, range) => {
     WEEK: [-1, 0, 1, 0, 2, 1, 0]
   };
 
-  return streakRanges[range].map((label, index) => ({
+  const labels = streakRanges[range];
+  const values = labels.map((label, index) => Math.max(1, streakDays + patterns[range][index]));
+  const lastValue = values[values.length - 1];
+
+  return labels.map((label, index) => ({
     label,
-    value: Math.max(1, streakDays + patterns[range][index])
+    value: values[index],
+    workouts: Math.max(1, Math.round(values[index] / 2) + index),
+    isToday: index === labels.length - 1,
+    isReset: index > 0 && values[index] < values[index - 1] && values[index] <= lastValue
   }));
 };
 
@@ -41,6 +48,23 @@ const getSetSizeHistory = (avgSetSize, range) => {
   return setSizeRanges[range].map((label, index) => ({
     label,
     value: Math.max(1, Number((avgSetSize + patterns[range][index]).toFixed(1)))
+  }));
+};
+
+const weeklySetRanges = {
+  YEAR: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  MONTH: ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+};
+
+const getWeeklySetHistory = (current, range) => {
+  const patterns = range === 'YEAR'
+    ? [-3, 2, -1, 4, 1, -2, 3, 0, 2, -1, 1, 0]
+    : [-2, 1, -1, 3];
+
+  return weeklySetRanges[range].map((label, index) => ({
+    label,
+    value: Math.max(1, current + patterns[index]),
+    recommended: Math.max(1, current - 2)
   }));
 };
 
@@ -218,19 +242,13 @@ const getNameSeed = (name) => [...name].reduce((seed, character, index) => (
 ), 17);
 
 const workRestRanges = {
-  YEAR: ['2025', '2026 YTD'],
-  QUARTER: ['Q1', 'Q2', 'Q3', 'Q4'],
-  MONTH: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-  WEEK: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-  DAY: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  YEAR: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  MONTH: ['Week 1', 'Week 2', 'Week 3', 'Week 4']
 };
 
 const workRestFilterLabels = {
   YEAR: 'Year',
-  QUARTER: 'Quarter',
-  MONTH: 'Month',
-  WEEK: 'Week',
-  DAY: 'Day'
+  MONTH: 'Month'
 };
 
 const getWorkRestData = (traineeName, range) => {
@@ -241,6 +259,20 @@ const getWorkRestData = (traineeName, range) => {
     return { label, workPercent, restPercent: 100 - workPercent };
   });
 };
+
+function ChartTooltip({ visible, left, top, fixed = false, children }) {
+  if (!visible) return null;
+
+  return (
+    <div
+      className={`pointer-events-none ${fixed ? 'fixed' : 'absolute'} z-50 w-max max-w-[220px] -translate-x-1/2 -translate-y-full rounded-lg border border-cyan-400/40 bg-[#0b1114]/95 px-3 py-2 text-[10px] font-mono text-gray-200 shadow-[0_8px_24px_rgba(0,0,0,0.35)]`}
+      style={{ left, top }}
+      role="status"
+    >
+      {children}
+    </div>
+  );
+}
 
 const getTraineeMuscleData = (traineeName) => {
   const nameSeed = getNameSeed(traineeName || 'Marcus Sterling');
@@ -280,11 +312,14 @@ const getTraineeMuscleData = (traineeName) => {
 
 function WorkRestRatioCard({ traineeName }) {
   const [workRestRange, setWorkRestRange] = useState('MONTH');
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [isChartOpen, setIsChartOpen] = useState(false);
   const workRestData = getWorkRestData(traineeName, workRestRange);
   const averageWork = Math.round(workRestData.reduce((total, point) => total + point.workPercent, 0) / workRestData.length);
   const averageRest = 100 - averageWork;
 
   return (
+    <>
     <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
       <div className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
@@ -295,44 +330,38 @@ function WorkRestRatioCard({ traineeName }) {
           <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-mono text-emerald-400">{averageWork}% work</span>
         </div>
 
-        <div className="grid grid-cols-5 gap-1.5" aria-label="Work and rest filters">
-          {Object.entries(workRestFilterLabels).map(([range, label]) => (
-            <button
-              key={range}
-              onClick={() => setWorkRestRange(range)}
-              className={`min-h-[30px] rounded-md px-1.5 py-1 text-[9px] font-mono transition-colors ${workRestRange === range
-                ? 'bg-cyan-300 text-[#071014]'
-                : 'border border-gray-700 bg-[#121418] text-gray-400 hover:border-cyan-500/50 hover:text-cyan-300'
-                }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-4 text-[10px] font-mono">
+        <div className="flex items-center gap-4 text-[10px] font-mono">
           <span className="flex items-center gap-2 text-red-300"><span className="h-2.5 w-2.5 rounded-sm bg-red-400" />Work</span>
           <span className="flex items-center gap-2 text-blue-300"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400" />Rest</span>
           <span className="ml-auto text-gray-500">Average: <span className="text-blue-300">{averageRest}% rest</span></span>
         </div>
 
-        <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-          {workRestData.map((point) => (
-            <div key={point.label} className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2 text-[9px] font-mono">
-              <span className="truncate text-gray-500">{point.label}</span>
-              <div className="flex h-7 overflow-hidden rounded-md border border-gray-700/80 bg-blue-400/80" title={`${point.workPercent}% Work / ${point.restPercent}% Rest`}>
-                <div className="flex min-w-0 items-center justify-center whitespace-nowrap bg-red-400/90 px-1 text-[11px] font-bold text-red-950" style={{ width: `${point.workPercent}%` }}>
-                  {point.workPercent}%
-                </div>
-                <div className="flex min-w-0 flex-1 items-center justify-center whitespace-nowrap bg-blue-400/75 px-1 text-[11px] font-bold text-blue-950">
-                  {point.restPercent}%
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="flex h-9 overflow-hidden rounded-lg border border-gray-700/80 bg-blue-400/80" title={`${averageWork}% Work / ${averageRest}% Rest`}>
+          <div className="flex items-center justify-center bg-red-400/90 text-xs font-bold text-red-950" style={{ width: `${averageWork}%` }}>{averageWork}%</div>
+          <div className="flex flex-1 items-center justify-center text-xs font-bold text-blue-950">{averageRest}%</div>
         </div>
+
+        <button onClick={() => setIsChartOpen(true)} className="w-full rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-[10px] font-mono text-cyan-300 transition-colors hover:bg-cyan-500/20">Click to view work / rest history</button>
       </div>
     </div>
+    {isChartOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`${traineeName} work rest history`} onClick={() => setIsChartOpen(false)}>
+        <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-cyan-500/30 bg-[#12191d] p-5 shadow-[0_0_40px_rgba(34,211,238,0.12)]" onClick={(event) => event.stopPropagation()}>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div><p className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">Work / Rest History</p><h3 className="mt-1 text-xl font-bold text-white">{traineeName}</h3></div>
+            <button onClick={() => setIsChartOpen(false)} aria-label="Close work rest chart" className="h-8 w-8 rounded-lg border border-gray-700 text-gray-400 hover:border-cyan-400 hover:text-white">×</button>
+          </div>
+          <div className="mb-5 grid grid-cols-2 gap-2">
+            {Object.entries(workRestFilterLabels).map(([range, label]) => <button key={range} onClick={() => { setWorkRestRange(range); setHoveredPoint(null); }} className={`rounded-lg px-3 py-2 text-[10px] font-mono ${workRestRange === range ? 'bg-cyan-300 text-[#071014]' : 'border border-gray-700 bg-[#181b20] text-gray-400 hover:border-cyan-500/50 hover:text-cyan-300'}`}>{label} ({workRestRanges[range].length} {range === 'YEAR' ? 'months' : 'weeks'})</button>)}
+          </div>
+          <div className="mb-4 flex flex-wrap gap-4 text-[10px] font-mono"><span className="flex items-center gap-2 text-red-300"><span className="h-2.5 w-2.5 rounded-sm bg-red-400" />Work</span><span className="flex items-center gap-2 text-blue-300"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400" />Rest</span><span className="ml-auto text-gray-500">Average work: <span className="text-red-300">{averageWork}%</span></span></div>
+          <div className="min-h-0 max-h-[calc(100vh-12rem)] space-y-3 overflow-y-auto rounded-xl border border-gray-800 bg-[#0d1215] p-4">
+            {workRestData.map((point) => <div key={point.label} className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-3 text-[10px] font-mono"><span className="text-gray-500">{point.label}</span><div className="relative flex h-9 overflow-visible rounded-md border border-gray-700/80 bg-blue-400/80" onMouseMove={(event) => setHoveredPoint({ ...point, x: event.clientX, y: event.clientY })} onMouseLeave={() => setHoveredPoint(null)}><ChartTooltip visible={hoveredPoint?.label === point.label} fixed left={hoveredPoint?.x ?? 0} top={(hoveredPoint?.y ?? 0) - 12}><div className="font-bold text-white">{point.label}</div><div className="mt-1 text-red-300">Work: {point.workPercent}%</div><div className="text-blue-300">Rest: {point.restPercent}%</div></ChartTooltip><div className="flex items-center justify-center bg-red-400/90 font-bold text-red-950" style={{ width: `${point.workPercent}%` }}>{point.workPercent}%</div><div className="flex flex-1 items-center justify-center font-bold text-blue-950">{point.restPercent}%</div></div></div>)}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -470,6 +499,12 @@ function MuscleDistribution({ traineeName }) {
       </div>
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-center">
         <div className="relative h-56 w-56 shrink-0">
+          <ChartTooltip visible={activeMuscle !== null} left="50%" top="12px">
+            {(() => {
+              const muscle = filteredMuscles.find((item) => item.name === activeMuscle);
+              return muscle && <><div className="font-bold text-white">{muscle.name}</div><div className="mt-1 text-cyan-300">{muscle.percentage}% - {muscle.sets} sets</div></>;
+            })()}
+          </ChartTooltip>
           <svg viewBox="0 0 200 200" className="h-full w-full overflow-visible" role="img" aria-label="Targeted muscles distribution pie chart">
             {filteredMuscles.map((muscle, index) => {
               const endAngle = startAngle + (muscle.percentage / 100) * 360;
@@ -521,13 +556,18 @@ function MuscleDistribution({ traineeName }) {
   );
 }
 
-function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
+function TraineeAnalytics({ traineeName = 'Marcus Sterling', points = 0 }) {
   const [isStreakChartOpen, setIsStreakChartOpen] = useState(false);
   const [streakRange, setStreakRange] = useState('MONTH');
   const [isSetSizeChartOpen, setIsSetSizeChartOpen] = useState(false);
   const [setSizeRange, setSetSizeRange] = useState('MONTH');
+  const [isWeeklySetChartOpen, setIsWeeklySetChartOpen] = useState(false);
+  const [weeklySetRange, setWeeklySetRange] = useState('MONTH');
+  const [hoveredWeeklySet, setHoveredWeeklySet] = useState(null);
   const [isExerciseChartOpen, setIsExerciseChartOpen] = useState(false);
   const [exerciseChartRange, setExerciseChartRange] = useState('MONTH');
+  const [hoveredStreakIndex, setHoveredStreakIndex] = useState(null);
+  const [hoveredSetSize, setHoveredSetSize] = useState(null);
   const variation = analyticsVariations[traineeName] || analyticsVariations['Marcus Sterling'];
   const { holisticMetrics, monthlyWeeklyAnalytics, topExercises, targetedMuscles } = {
     ...mockAnalyticsData,
@@ -557,14 +597,23 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
       return `${x},${y}`;
     })
     .join(' ');
+  const chartAreaPoints = `0,${chartHeight} ${chartPoints} ${chartWidth},${chartHeight}`;
+  const streakRangeLabels = {
+    YEAR: 'Monthly streak progression',
+    QUARTER: 'Weekly streak progression',
+    MONTH: 'Daily streak progression',
+    WEEK: 'Daily streak progression'
+  };
   const averageSetSize = Number.parseFloat(monthlyWeeklyAnalytics.avgSetSize.weekly);
   const setSizeHistory = getSetSizeHistory(averageSetSize, setSizeRange);
   const setSizeChartMax = Math.max(14, ...setSizeHistory.map((point) => point.value));
+  const weeklySetHistory = getWeeklySetHistory(monthlyWeeklyAnalytics.weeklySetCount.current, weeklySetRange);
+  const weeklySetChartMax = Math.max(monthlyWeeklyAnalytics.weeklySetCount.recommended, ...weeklySetHistory.map((point) => point.value));
 
   return (
     <div className="space-y-6 text-left font-sans" dir="ltr">
       {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
           <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2">
             Consistency Streak
@@ -587,6 +636,16 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
           <div className="text-3xl font-black text-white font-mono">
             {holisticMetrics.totalWorkouts}
           </div>
+        </div>
+
+        <div className="bg-[#181b20] border border-emerald-500/20 rounded-2xl p-5 shadow-lg">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2">
+            Training Points
+          </span>
+          <div className="text-3xl font-black text-emerald-300 font-mono">
+            {points.toLocaleString()}
+          </div>
+          <span className="mt-2 block text-[10px] font-mono text-gray-500">Unlimited cumulative reward</span>
         </div>
 
       </div>
@@ -629,6 +688,12 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
           <span className="text-xs text-gray-500 font-mono">
             Trend: {monthlyWeeklyAnalytics.weeklySetCount.trend}
           </span>
+          <button
+            onClick={() => setIsWeeklySetChartOpen(true)}
+            className="mt-3 w-full rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-mono text-cyan-300 transition-colors hover:bg-cyan-500/20"
+          >
+            Click to view set history
+          </button>
         </div>
       </div>
 
@@ -714,8 +779,47 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
               ))}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-800 bg-[#0d1215] p-3">
-              <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 36}`} className="min-w-[560px] w-full h-64" role="img" aria-label={`${streakRange.toLowerCase()} consistency chart`}>
+            <div className="overflow-x-hidden rounded-xl border border-gray-800 bg-[#0d1215] p-3">
+              <div className="relative w-full">
+                {hoveredStreakIndex !== null && (() => {
+                  const point = streakHistory[hoveredStreakIndex];
+                  const left = `${(hoveredStreakIndex / (streakHistory.length - 1)) * 100}%`;
+                  const top = `${((chartHeight - (point.value / chartMax) * chartHeight) / (chartHeight + 42)) * 100}%`;
+                  return (
+                    <ChartTooltip visible left={`clamp(96px, ${left}, calc(100% - 96px))`} top={top}>
+                      <div className="flex items-center justify-between gap-5"><span className="font-bold text-white">{point.isToday ? 'Today' : point.label}</span><span className="text-gray-500">{point.label}</span></div>
+                      <div className="mt-1 text-lg font-black text-white">{point.value} days</div>
+                      <div className="mt-1 text-cyan-300">{point.workouts} workouts</div>
+                    </ChartTooltip>
+                  );
+                })()}
+                <div className="mb-2 flex items-center justify-between px-1 font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                  <span>Streak (days)</span>
+                  <span className="text-cyan-300">{streakRangeLabels[streakRange]}</span>
+                </div>
+                <svg
+                  viewBox={`0 0 ${chartWidth} ${chartHeight + 42}`}
+                  className="h-72 w-full"
+                  role="img"
+                  aria-label={`${streakRange.toLowerCase()} consistency chart`}
+                  onMouseMove={(event) => {
+                    const bounds = event.currentTarget.getBoundingClientRect();
+                    const ratio = (event.clientX - bounds.left) / bounds.width;
+                    const index = Math.round(ratio * (streakHistory.length - 1));
+                    setHoveredStreakIndex(Math.max(0, Math.min(streakHistory.length - 1, index)));
+                  }}
+                  onMouseLeave={() => setHoveredStreakIndex(null)}
+                >
+                <defs>
+                  <linearGradient id="streakAreaGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.46" />
+                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.04" />
+                  </linearGradient>
+                  <filter id="streakGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                  </filter>
+                </defs>
                 {[0, Math.round(chartMax / 2), chartMax].map((value) => {
                   const y = chartHeight - (value / chartMax) * chartHeight;
                   return (
@@ -725,22 +829,85 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
                     </g>
                   );
                 })}
-                <polyline points={chartPoints} fill="none" stroke="#22d3ee" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                {streakHistory.map((point, index) => {
+                  if (!point.isReset) return null;
+                  const x = (index / (streakHistory.length - 1)) * chartWidth;
+                  return <line key={`reset-${point.label}`} x1={x} y1="0" x2={x} y2={chartHeight + 2} stroke="#3b5262" strokeDasharray="5 7" strokeWidth="1.5" />;
+                })}
+                <polygon points={chartAreaPoints} fill="url(#streakAreaGradient)" />
+                <polyline points={chartPoints} fill="none" stroke="#38d5f5" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#streakGlow)" />
                 {streakHistory.map((point, index) => {
                   const x = (index / (streakHistory.length - 1)) * chartWidth;
                   const y = chartHeight - (point.value / chartMax) * chartHeight;
                   return (
                     <g key={point.label}>
-                      <circle cx={x} cy={y} r="6" fill="#12191d" stroke="#67e8f9" strokeWidth="3" />
-                      <text x={x} y={chartHeight + 25} textAnchor="middle" fill="#718096" fontSize="11" fontFamily="monospace">{point.label}</text>
+                      {point.isToday && <line x1={x} y1={y - 8} x2={x} y2={chartHeight + 2} stroke="#38d5f5" strokeDasharray="4 5" opacity="0.75" />}
+                      <circle cx={x} cy={y} r={point.isToday ? 8 : hoveredStreakIndex === index ? 8 : 5} fill={point.isToday ? '#f8fafc' : '#0d1820'} stroke="#38d5f5" strokeWidth={point.isToday ? 4 : 2.5} filter={point.isToday ? 'url(#streakGlow)' : undefined} />
+                      {point.isToday && <circle cx={x} cy={y} r="13" fill="none" stroke="#38d5f5" strokeOpacity="0.25" strokeWidth="3" />}
+                      <text x={x} y={chartHeight + 25} textAnchor="middle" fill={point.isToday ? '#e2e8f0' : '#718096'} fontSize="11" fontWeight={point.isToday ? '700' : '400'} fontFamily="monospace">{point.label}</text>
                     </g>
                   );
                 })}
-              </svg>
+                </svg>
+              </div>
             </div>
             <div className="flex items-center justify-between mt-4 text-[10px] font-mono text-gray-500">
               <span>Streak scale: 0 - {chartMax} days</span>
               <span className="text-cyan-300">Current: {holisticMetrics.streakDays} days</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isWeeklySetChartOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${traineeName} weekly set count history`}
+          onClick={() => setIsWeeklySetChartOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            className="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-cyan-500/30 bg-[#12191d] p-5 shadow-[0_0_40px_rgba(34,211,238,0.12)]"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">Weekly Set Count History</p>
+                <h3 className="mt-1 text-xl font-bold text-white">{traineeName}</h3>
+              </div>
+              <button onClick={() => setIsWeeklySetChartOpen(false)} aria-label="Close weekly set chart" className="h-8 w-8 rounded-lg border border-gray-700 text-gray-400 hover:border-cyan-400 hover:text-white">×</button>
+            </div>
+
+            <div className="mb-5 grid grid-cols-2 gap-2">
+              {Object.entries({ YEAR: 'Year', MONTH: 'Month' }).map(([range, label]) => (
+                <button key={range} onClick={() => { setWeeklySetRange(range); setHoveredWeeklySet(null); }} className={`rounded-lg px-3 py-2 text-[10px] font-mono ${weeklySetRange === range ? 'bg-cyan-300 text-[#071014]' : 'border border-gray-700 bg-[#181b20] text-gray-400 hover:border-cyan-500/50 hover:text-cyan-300'}`}>
+                  {label} ({weeklySetRanges[range].length} {range === 'YEAR' ? 'months' : 'weeks'})
+                </button>
+              ))}
+            </div>
+
+            <div className="mb-4 flex items-center justify-between text-[10px] font-mono text-gray-500">
+              <span>Current: <b className="text-cyan-300">{monthlyWeeklyAnalytics.weeklySetCount.current} sets</b></span>
+              <span>Recommended: <b className="text-emerald-300">{monthlyWeeklyAnalytics.weeklySetCount.recommended} sets</b></span>
+            </div>
+
+            <div className="min-h-0 overflow-x-auto rounded-xl border border-gray-800 bg-[#0d1215] p-4">
+              <div className="flex h-72 min-w-[560px] items-end gap-3 border-b border-gray-700 px-2">
+                {weeklySetHistory.map((point) => {
+                  const height = Math.max(12, (point.value / weeklySetChartMax) * 100);
+                  const recommendedHeight = (point.recommended / weeklySetChartMax) * 100;
+                  const isHovered = hoveredWeeklySet?.label === point.label;
+                  return (
+                    <div key={point.label} className="relative flex h-full flex-1 flex-col items-center justify-end gap-2" onMouseMove={(event) => { const bounds = event.currentTarget.getBoundingClientRect(); setHoveredWeeklySet({ ...point, x: event.clientX - bounds.left }); }} onMouseLeave={() => setHoveredWeeklySet(null)}>
+                      <div className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-emerald-400/70" style={{ bottom: `${recommendedHeight}%` }} />
+                      <ChartTooltip visible={isHovered} left={hoveredWeeklySet?.x ?? 0} top="-8px"><div className="font-bold text-white">{point.label}</div><div className="mt-1 text-cyan-300">{point.value} sets</div><div className="text-emerald-300">Target: {point.recommended}</div></ChartTooltip>
+                      <div className={`relative flex w-full max-w-16 items-center justify-center rounded-t-lg border border-cyan-300/50 bg-cyan-400/80 text-[10px] font-bold font-mono text-[#071014] shadow-[0_0_18px_rgba(34,211,238,0.2)] ${isHovered ? 'ring-2 ring-cyan-200' : ''}`} style={{ height: `${height}%` }}>{point.value}</div>
+                      <span className="text-[10px] font-mono text-gray-500">{point.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -790,11 +957,24 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling' }) {
             <div className="h-72 rounded-xl border border-gray-800 bg-[#0d1215] p-5">
               <div className="h-full flex items-end gap-3 sm:gap-5 border-b border-gray-700 px-2">
                 {setSizeHistory.map((point) => (
-                  <div key={point.label} className="h-full flex-1 flex flex-col items-center justify-end gap-2 min-w-0">
+                  <div
+                    key={point.label}
+                    className="relative h-full flex-1 flex flex-col items-center justify-end gap-2 min-w-0"
+                    onMouseMove={(event) => {
+                      const bounds = event.currentTarget.getBoundingClientRect();
+                      setHoveredSetSize({ ...point, x: event.clientX - bounds.left });
+                    }}
+                    onMouseLeave={() => setHoveredSetSize(null)}
+                  >
                     <div
-                      className="w-full max-w-16 min-h-9 rounded-t-lg border border-cyan-300/50 bg-cyan-400/80 flex items-center justify-center text-[10px] sm:text-xs font-bold font-mono text-[#071014] shadow-[0_0_18px_rgba(34,211,238,0.2)]"
+                      className={`relative w-full max-w-16 min-h-9 rounded-t-lg border border-cyan-300/50 bg-cyan-400/80 flex items-center justify-center text-[10px] sm:text-xs font-bold font-mono text-[#071014] shadow-[0_0_18px_rgba(34,211,238,0.2)] ${hoveredSetSize?.label === point.label ? 'ring-2 ring-cyan-200' : ''}`}
                       style={{ height: `${Math.max(12, (point.value / setSizeChartMax) * 100)}%` }}
                     >
+                      <ChartTooltip visible={hoveredSetSize?.label === point.label} left={hoveredSetSize?.x ?? 0} top="-8px">
+                        <div className="font-bold text-white">{point.label}</div>
+                        <div className="mt-1 text-cyan-300">{point.value} reps</div>
+                      </ChartTooltip>
+                      {hoveredSetSize?.label === point.label && <span className="pointer-events-none absolute -top-1 h-2 w-2 -translate-x-1/2 rounded-full bg-cyan-200 ring-2 ring-cyan-400/40" style={{ left: hoveredSetSize.x }} />}
                       {point.value} reps
                     </div>
                     <span className="text-[10px] font-mono text-gray-500">{point.label}</span>

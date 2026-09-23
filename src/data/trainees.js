@@ -1,4 +1,4 @@
-export const trainees = [
+const traineeRecords = [
     {
         id: 'TR-8924',
         name: 'Marcus Sterling',
@@ -269,5 +269,10 @@ export const trainees = [
         status: 'ACTIVE'
     }
 ];
+
+export const trainees = traineeRecords.map((trainee, index) => ({
+    ...trainee,
+    points: trainee.score * 100 + (index + 3) * 275
+}));
 
 export const alertTrainees = trainees.filter((trainee) => trainee.status !== 'ACTIVE');

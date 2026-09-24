@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopHeader from '../bars/TopHeader';
 import { trainees } from '../../data/trainees';
-import frontMusclesDiagram from '../../assets/front-muscles-diagram.svg';
-import backMusclesDiagram from '../../assets/back-muscles-diagram.svg';
+import MuscleBodyDiagram from './MuscleBodyDiagram';
 
 const ageOptions = [
     { value: 'ALL', label: 'All ages' },
@@ -14,28 +13,47 @@ const ageOptions = [
 
 const defaultFilters = { gender: 'ALL', ageRange: 'ALL' };
 
+const exerciseImageMap = {
+    'Barbell Bench Press': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=80',
+    'Lat Pulldown': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Incline Dumbbell Press': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Barbell Squat': 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=900&q=80',
+    'Dumbbell Bicep Curl': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=900&q=80',
+    'Dumbbell Lunge': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=900&q=80',
+    Deadlift: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Romanian Deadlift': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Overhead Press': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Cable Row': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Hip Thrust': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Pull-up': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Power Clean': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Walking Lunges': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=900&q=80',
+    'Box Jumps': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Plank Hold': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80'
+};
+
 const exerciseCatalog = [
-    ['Barbell Bench Press', 'Chest', 'benchpress,gym', 24],
-    ['Lat Pulldown', 'Back', 'latpulldown,gym', 20],
-    ['Incline Dumbbell Press', 'Chest', 'dumbbell,press,gym', 18],
-    ['Barbell Squat', 'Legs', 'barbell,squat,gym', 15],
-    ['Dumbbell Bicep Curl', 'Arms', 'bicep,curl,gym', 12],
-    ['Dumbbell Lunge', 'Legs', 'lunge,dumbbell,gym', 11],
-    ['Deadlift', 'Back & Legs', 'deadlift,gym', 10],
-    ['Romanian Deadlift', 'Hamstrings', 'romanian,deadlift,gym', 9],
-    ['Overhead Press', 'Shoulders', 'overhead,press,gym', 8],
-    ['Cable Row', 'Back', 'cable,row,gym', 7],
-    ['Hip Thrust', 'Glutes', 'hip,thrust,gym', 6],
-    ['Pull-up', 'Back', 'pullup,gym', 5],
-    ['Power Clean', 'Full Body', 'power,clean,gym', 4],
-    ['Walking Lunges', 'Legs', 'walking,lunge,gym', 3],
-    ['Box Jumps', 'Power', 'box,jump,gym', 2],
-    ['Plank Hold', 'Core', 'plank,gym', 1]
-].map(([name, category, search, usage]) => ({
+    ['Barbell Bench Press', 'Chest', 24],
+    ['Lat Pulldown', 'Back', 20],
+    ['Incline Dumbbell Press', 'Chest', 18],
+    ['Barbell Squat', 'Legs', 15],
+    ['Dumbbell Bicep Curl', 'Arms', 12],
+    ['Dumbbell Lunge', 'Legs', 11],
+    ['Deadlift', 'Back & Legs', 10],
+    ['Romanian Deadlift', 'Hamstrings', 9],
+    ['Overhead Press', 'Shoulders', 8],
+    ['Cable Row', 'Back', 7],
+    ['Hip Thrust', 'Glutes', 6],
+    ['Pull-up', 'Back', 5],
+    ['Power Clean', 'Full Body', 4],
+    ['Walking Lunges', 'Legs', 3],
+    ['Box Jumps', 'Power', 2],
+    ['Plank Hold', 'Core', 1]
+].map(([name, category, usage]) => ({
     name,
     category,
     usage,
-    image: `https://loremflickr.com/320/220/${search}?lock=${usage}`
+    image: exerciseImageMap[name] || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80'
 }));
 
 const yearOptions = ['ALL', '2026', '2025'];
@@ -172,66 +190,6 @@ function TeamAiInsights({ traineeGroup, filters }) {
     );
 }
 
-function AggregateMuscleBody({ view, activeMuscle }) {
-    return (
-        <img
-            src={view === 'front' ? frontMusclesDiagram : backMusclesDiagram}
-            alt={`${view === 'front' ? 'Front' : 'Back'} aggregate muscle diagram`}
-            className="h-72 w-full object-contain"
-        />
-    );
-}
-/*
-    const isActive = (names) => names.includes(activeMuscle);
-    const baseClass = 'fill-[#27343b] stroke-[#52636c] stroke-[1.2]';
-    const activeClass = 'fill-red-500 stroke-red-200';
-
-    return (
-        <svg viewBox="0 0 180 360" className="h-72 w-full" role="img" aria-label={`${view} aggregate muscle map`}>
-            <g className="fill-[#1b252a] stroke-[#52636c] stroke-[1.5]">
-                <circle cx="90" cy="27" r="18" />
-                <path d="M83 43 L97 43 L101 56 L79 56 Z" />
-                <path d="M79 55 C71 57 65 64 61 72 L70 119 C73 132 77 142 79 153 L90 169 L101 153 C103 142 107 132 110 119 L119 72 C115 64 109 57 101 55 L96 62 L84 62 Z" />
-                <path d="M62 68 C56 69 52 73 50 80 L48 145 C48 151 51 155 55 155 C59 155 61 151 61 146 L65 91 Z" />
-                <path d="M118 68 C124 69 128 73 130 80 L132 145 C132 151 129 155 125 155 C121 155 119 151 119 146 L115 91 Z" />
-                <path d="M79 145 C75 158 71 176 70 195 L64 246 L57 321 C57 326 61 329 67 329 L72 326 L83 253 L90 190 L97 253 L108 326 L113 329 C119 329 123 326 123 321 L116 246 L110 195 C109 176 105 158 101 145 L90 169 Z" />
-                <path d="M57 321 L52 329 L71 329 L72 326 Z" />
-                <path d="M123 321 L128 329 L109 329 L108 326 Z" />
-            </g>
-            {view === 'front' ? (
-                <g>
-                    <path className={`${baseClass} ${isActive(['Pectoralis Major']) ? activeClass : ''}`} d="M69 76 C75 68 84 68 89 76 L88 105 C79 108 70 104 64 96 Z" />
-                    <path className={`${baseClass} ${isActive(['Pectoralis Major']) ? activeClass : ''}`} d="M91 76 C96 68 105 68 111 76 L116 96 C110 104 101 108 92 105 Z" />
-                    <path className={`${baseClass} ${isActive(['Anterior Deltoids']) ? activeClass : ''}`} d="M58 76 C61 70 65 68 70 72 L68 91 L57 94 L53 86 Z" />
-                    <path className={`${baseClass} ${isActive(['Anterior Deltoids']) ? activeClass : ''}`} d="M122 76 C119 70 115 68 110 72 L112 91 L123 94 L127 86 Z" />
-                    <path className={`${baseClass} ${isActive(['Biceps Brachii']) ? activeClass : ''}`} d="M57 91 L68 89 L67 126 L64 145 L55 145 Z" />
-                    <path className={`${baseClass} ${isActive(['Biceps Brachii']) ? activeClass : ''}`} d="M123 91 L112 89 L113 126 L116 145 L125 145 Z" />
-                    <path className={`${baseClass} ${isActive(['Triceps Brachii']) ? activeClass : ''}`} d="M53 91 L57 94 L55 145 L53 156 L49 145 Z" />
-                    <path className={`${baseClass} ${isActive(['Triceps Brachii']) ? activeClass : ''}`} d="M127 91 L123 94 L125 145 L127 156 L131 145 Z" />
-                    <path className={`${baseClass} ${isActive(['Core']) ? activeClass : ''}`} d="M78 106 L90 110 L102 106 L105 145 L90 169 L75 145 Z" />
-                    <path className={`${baseClass} ${isActive(['Quadriceps']) ? activeClass : ''}`} d="M72 166 L88 174 L83 253 L70 285 L64 246 Z" />
-                    <path className={`${baseClass} ${isActive(['Quadriceps']) ? activeClass : ''}`} d="M108 166 L92 174 L97 253 L110 285 L116 246 Z" />
-                </g>
-            ) : (
-                <g>
-                    <path className={`${baseClass} ${isActive(['Latissimus Dorsi']) ? activeClass : ''}`} d="M68 76 L88 70 L86 132 L72 151 L64 121 Z" />
-                    <path className={`${baseClass} ${isActive(['Latissimus Dorsi']) ? activeClass : ''}`} d="M112 76 L92 70 L94 132 L108 151 L116 121 Z" />
-                    <path className={`${baseClass} ${isActive(['Trapezius']) ? activeClass : ''}`} d="M78 62 L90 70 L102 62 L108 82 L90 103 L72 82 Z" />
-                    <path className={`${baseClass} ${isActive(['Rhomboids']) ? activeClass : ''}`} d="M84 82 L90 76 L96 82 L94 116 L90 125 L86 116 Z" />
-                    <path className={`${baseClass} ${isActive(['Erector Spinae']) ? activeClass : ''}`} d="M78 116 L86 122 L86 166 L78 151 Z" />
-                    <path className={`${baseClass} ${isActive(['Erector Spinae']) ? activeClass : ''}`} d="M102 116 L94 122 L94 166 L102 151 Z" />
-                    <path className={`${baseClass} ${isActive(['Rear Deltoids']) ? activeClass : ''}`} d="M58 76 L70 72 L68 96 L56 100 L52 88 Z" />
-                    <path className={`${baseClass} ${isActive(['Rear Deltoids']) ? activeClass : ''}`} d="M122 76 L110 72 L112 96 L124 100 L128 88 Z" />
-                    <path className={`${baseClass} ${isActive(['Gluteus Maximus']) ? activeClass : ''}`} d="M70 151 L90 160 L110 151 L113 194 L90 207 L67 194 Z" />
-                    <path className={`${baseClass} ${isActive(['Hamstrings']) ? activeClass : ''}`} d="M68 195 L87 203 L82 263 L69 285 L64 246 Z" />
-                    <path className={`${baseClass} ${isActive(['Hamstrings']) ? activeClass : ''}`} d="M112 195 L93 203 L98 263 L111 285 L116 246 Z" />
-                </g>
-            )}
-        </svg>
-    );
-}
-*/
-
 function AggregateMuscleCard({ traineeGroup, filters, onChange }) {
     const distribution = getAverageMuscleDistribution(traineeGroup, filters);
     const [activeMuscle, setActiveMuscle] = useState(null);
@@ -306,7 +264,13 @@ function AggregateMuscleCard({ traineeGroup, filters, onChange }) {
                         {['front', 'back'].map((view) => (
                             <div key={view} className="rounded-xl border border-gray-800 bg-[#0d1013] p-3">
                                 <p className="mb-2 text-center text-[10px] font-mono uppercase tracking-widest text-gray-500">{view} view</p>
-                                <AggregateMuscleBody view={view} activeMuscle={activeMuscle} />
+                                <MuscleBodyDiagram
+                                    view={view}
+                                    activeMuscle={activeMuscle}
+                                    onMuscleEnter={setActiveMuscle}
+                                    onMuscleLeave={() => setActiveMuscle(null)}
+                                    className="h-72 w-full"
+                                />
                             </div>
                         ))}
                     </div>

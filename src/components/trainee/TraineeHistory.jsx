@@ -1,15 +1,54 @@
 import React, { useState } from 'react';
 import WorkoutCard from './WorkoutCard';
 
-// Image Assets
-const maleExerciseImage =
-    'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=320&q=80';
-const femaleExerciseImage =
-    'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=320&q=80';
+// Relevant workout and exercise imagery
 const maleBodyImage =
     'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=480&q=80';
 const femaleBodyImage =
     'https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&w=480&q=80';
+
+const exerciseImageMap = {
+    'Barbell Back Squat': 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=900&q=80',
+    'Romanian Deadlift': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Walking Lunges': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=900&q=80',
+    'Standing Calf Raise': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=80',
+    'Barbell Bench Press': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Cable Row': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Overhead Press': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'EZ-Bar Curl': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Box Jumps': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Mountain Climbers': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Plank Hold': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Dumbbell Lunges': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=900&q=80',
+    'Hip Thrust': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Step Ups': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Banded Kickback': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Dumbbell Row': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'Band Pull Apart': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Dumbbell Lateral Raise': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Assisted Pull-up': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
+    'Bodyweight Squat': 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=900&q=80',
+    'Jumping Jacks': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=900&q=80',
+    'High Knees': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=900&q=80',
+    'Plank Shoulder Tap': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80'
+};
+
+const workoutImageMap = {
+    'Lower Body Power': 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80',
+    'Upper Body Strength': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80',
+    'Sprint Conditioning': 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=80',
+    'Glute Activation': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80',
+    'Upper Body Mobility': 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80',
+    'Cardio Intervals': 'https://images.unsplash.com/photo-1541534401786-2077eed87a74?auto=format&fit=crop&w=1200&q=80'
+};
+
+const getExerciseImage = (name, gender = 'male') => exerciseImageMap[name] || (gender === 'female'
+    ? 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80'
+    : 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=900&q=80');
+
+const getWorkoutImage = (title, gender = 'male') => workoutImageMap[title] || (gender === 'female'
+    ? femaleBodyImage
+    : maleBodyImage);
 
 // Workout Datasets
 const workoutSets = {
@@ -56,12 +95,12 @@ export const workoutProfiles = {
             type: 'Power',
             targetMuscles: ['QUADS', 'GLUTES', 'HAMSTRINGS'],
             bodyView: 'Front',
-            bodyImage: maleBodyImage,
+            bodyImage: getWorkoutImage('Lower Body Power', 'male'),
             exercises: [
-                { name: 'Barbell Back Squat', image: maleExerciseImage, sets: workoutSets.squat },
-                { name: 'Romanian Deadlift', image: maleExerciseImage, sets: workoutSets.triple },
-                { name: 'Walking Lunges', image: maleExerciseImage, sets: workoutSets.lunge },
-                { name: 'Standing Calf Raise', image: maleExerciseImage, sets: workoutSets.single },
+                { name: 'Barbell Back Squat', image: getExerciseImage('Barbell Back Squat', 'male'), sets: workoutSets.squat },
+                { name: 'Romanian Deadlift', image: getExerciseImage('Romanian Deadlift', 'male'), sets: workoutSets.triple },
+                { name: 'Walking Lunges', image: getExerciseImage('Walking Lunges', 'male'), sets: workoutSets.lunge },
+                { name: 'Standing Calf Raise', image: getExerciseImage('Standing Calf Raise', 'male'), sets: workoutSets.single },
             ],
         },
         {
@@ -73,12 +112,12 @@ export const workoutProfiles = {
             type: 'Strength',
             targetMuscles: ['CHEST', 'BACK', 'ARMS'],
             bodyView: 'Back',
-            bodyImage: maleBodyImage,
+            bodyImage: getWorkoutImage('Upper Body Strength', 'male'),
             exercises: [
-                { name: 'Barbell Bench Press', image: maleExerciseImage, sets: workoutSets.press },
-                { name: 'Cable Row', image: maleExerciseImage, sets: workoutSets.triple },
-                { name: 'Overhead Press', image: maleExerciseImage, sets: workoutSets.single },
-                { name: 'EZ-Bar Curl', image: maleExerciseImage, sets: workoutSets.four },
+                { name: 'Barbell Bench Press', image: getExerciseImage('Barbell Bench Press', 'male'), sets: workoutSets.press },
+                { name: 'Cable Row', image: getExerciseImage('Cable Row', 'male'), sets: workoutSets.triple },
+                { name: 'Overhead Press', image: getExerciseImage('Overhead Press', 'male'), sets: workoutSets.single },
+                { name: 'EZ-Bar Curl', image: getExerciseImage('EZ-Bar Curl', 'male'), sets: workoutSets.four },
             ],
         },
         {
@@ -90,12 +129,12 @@ export const workoutProfiles = {
             type: 'Conditioning',
             targetMuscles: ['LEGS', 'CORE'],
             bodyView: 'Front',
-            bodyImage: maleBodyImage,
+            bodyImage: getWorkoutImage('Sprint Conditioning', 'male'),
             exercises: [
-                { name: 'Walking Lunges', image: maleExerciseImage, sets: workoutSets.lunge },
-                { name: 'Box Jumps', image: maleExerciseImage, sets: workoutSets.single },
-                { name: 'Mountain Climbers', image: maleExerciseImage, sets: workoutSets.triple },
-                { name: 'Plank Hold', image: maleExerciseImage, sets: workoutSets.four },
+                { name: 'Walking Lunges', image: getExerciseImage('Walking Lunges', 'male'), sets: workoutSets.lunge },
+                { name: 'Box Jumps', image: getExerciseImage('Box Jumps', 'male'), sets: workoutSets.single },
+                { name: 'Mountain Climbers', image: getExerciseImage('Mountain Climbers', 'male'), sets: workoutSets.triple },
+                { name: 'Plank Hold', image: getExerciseImage('Plank Hold', 'male'), sets: workoutSets.four },
             ],
         },
     ],
@@ -109,12 +148,12 @@ export const workoutProfiles = {
             type: 'Strength',
             targetMuscles: ['GLUTES', 'CORE'],
             bodyView: 'Back',
-            bodyImage: femaleBodyImage,
+            bodyImage: getWorkoutImage('Glute Activation', 'female'),
             exercises: [
-                { name: 'Dumbbell Lunges', image: femaleExerciseImage, sets: workoutSets.lunge },
-                { name: 'Hip Thrust', image: femaleExerciseImage, sets: workoutSets.triple },
-                { name: 'Step Ups', image: femaleExerciseImage, sets: workoutSets.single },
-                { name: 'Banded Kickback', image: femaleExerciseImage, sets: workoutSets.four },
+                { name: 'Dumbbell Lunges', image: getExerciseImage('Dumbbell Lunges', 'female'), sets: workoutSets.lunge },
+                { name: 'Hip Thrust', image: getExerciseImage('Hip Thrust', 'female'), sets: workoutSets.triple },
+                { name: 'Step Ups', image: getExerciseImage('Step Ups', 'female'), sets: workoutSets.single },
+                { name: 'Banded Kickback', image: getExerciseImage('Banded Kickback', 'female'), sets: workoutSets.four },
             ],
         },
         {
@@ -126,12 +165,12 @@ export const workoutProfiles = {
             type: 'Mobility',
             targetMuscles: ['BACK', 'SHOULDERS'],
             bodyView: 'Back',
-            bodyImage: femaleBodyImage,
+            bodyImage: getWorkoutImage('Upper Body Mobility', 'female'),
             exercises: [
-                { name: 'Dumbbell Row', image: femaleExerciseImage, sets: workoutSets.row },
-                { name: 'Band Pull Apart', image: femaleExerciseImage, sets: workoutSets.single },
-                { name: 'Dumbbell Lateral Raise', image: femaleExerciseImage, sets: workoutSets.triple },
-                { name: 'Assisted Pull-up', image: femaleExerciseImage, sets: workoutSets.four },
+                { name: 'Dumbbell Row', image: getExerciseImage('Dumbbell Row', 'female'), sets: workoutSets.row },
+                { name: 'Band Pull Apart', image: getExerciseImage('Band Pull Apart', 'female'), sets: workoutSets.single },
+                { name: 'Dumbbell Lateral Raise', image: getExerciseImage('Dumbbell Lateral Raise', 'female'), sets: workoutSets.triple },
+                { name: 'Assisted Pull-up', image: getExerciseImage('Assisted Pull-up', 'female'), sets: workoutSets.four },
             ],
         },
         {
@@ -143,12 +182,12 @@ export const workoutProfiles = {
             type: 'Conditioning',
             targetMuscles: ['FULL BODY'],
             bodyView: 'Front',
-            bodyImage: femaleBodyImage,
+            bodyImage: getWorkoutImage('Cardio Intervals', 'female'),
             exercises: [
-                { name: 'Bodyweight Squat', image: femaleExerciseImage, sets: workoutSets.squat },
-                { name: 'Jumping Jacks', image: femaleExerciseImage, sets: workoutSets.single },
-                { name: 'High Knees', image: femaleExerciseImage, sets: workoutSets.triple },
-                { name: 'Plank Shoulder Tap', image: femaleExerciseImage, sets: workoutSets.four },
+                { name: 'Bodyweight Squat', image: getExerciseImage('Bodyweight Squat', 'female'), sets: workoutSets.squat },
+                { name: 'Jumping Jacks', image: getExerciseImage('Jumping Jacks', 'female'), sets: workoutSets.single },
+                { name: 'High Knees', image: getExerciseImage('High Knees', 'female'), sets: workoutSets.triple },
+                { name: 'Plank Shoulder Tap', image: getExerciseImage('Plank Shoulder Tap', 'female'), sets: workoutSets.four },
             ],
         },
     ],

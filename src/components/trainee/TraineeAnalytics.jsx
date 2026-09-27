@@ -1,6 +1,107 @@
 import React, { useState } from 'react';
 import MuscleBodyDiagram from '../dashboard/MuscleBodyDiagram';
 
+const DumbbellIcon = ({ className }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M14.4 14.4 9.6 9.6" />
+    <path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767-1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z" />
+    <path d="m21.5 21.5-1.4-1.4" />
+    <path d="M3.9 3.9 2.5 2.5" />
+    <path d="M6.404 2.515a2 2 0 1 1 2.829 2.828l1.767 1.768a2 2 0 1 1 2.829 2.829L7.465 16.304a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829z" />
+  </svg>
+);
+
+const RefreshCwIcon = ({ className }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+    <path d="M3 21v-5h5" />
+  </svg>
+);
+
+const LayersIcon = ({ className }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" />
+    <path d="m22 12.5-8.58 3.91a2 2 0 0 1-1.66 0L3.18 12.5" />
+    <path d="m22 17.5-8.58 3.91a2 2 0 0 1-1.66 0L3.18 17.5" />
+  </svg>
+);
+
+const ChevronRightIcon = ({ className }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
+const metrics = [
+  {
+    id: 'exercises',
+    icon: <DumbbellIcon className="w-5 h-5 text-cyan-400" />,
+    title: 'EXERCISES',
+    subtitle: 'Planned vs. completed exercises.',
+    percentage: '86%',
+    progress: 86,
+    subtext: '18 of 21 matched',
+    color: 'from-cyan-500 to-cyan-400',
+    iconBg: 'bg-cyan-950/40 border-cyan-500/30'
+  },
+  {
+    id: 'reps',
+    icon: <RefreshCwIcon className="w-5 h-5 text-emerald-400" />,
+    title: 'REPS',
+    subtitle: 'Total reps performed as planned.',
+    percentage: '73%',
+    progress: 73,
+    subtext: '152 of 208 matched',
+    color: 'from-emerald-400 to-teal-400',
+    iconBg: 'bg-emerald-950/40 border-emerald-500/30'
+  },
+  {
+    id: 'sets',
+    icon: <LayersIcon className="w-5 h-5 text-purple-400" />,
+    title: 'SETS',
+    subtitle: 'Total sets completed as planned.',
+    percentage: '76%',
+    progress: 76,
+    subtext: '38 of 50 matched',
+    color: 'from-purple-500 to-indigo-400',
+    iconBg: 'bg-purple-950/40 border-purple-500/30'
+  }
+];
+
 const streakRanges = {
   YEAR: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
   QUARTER: ['W1', 'W3', 'W5', 'W7', 'W9', 'W12'],
@@ -319,47 +420,47 @@ function WorkRestRatioCard({ traineeName }) {
 
   return (
     <>
-    <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block">Work / Rest Ratio</span>
-            <p className="mt-1 text-[10px] font-mono text-gray-500">Current filter: <span className="text-cyan-300">{workRestFilterLabels[workRestRange]}</span></p>
+      <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block">Work / Rest Ratio</span>
+              <p className="mt-1 text-[10px] font-mono text-gray-500">Current filter: <span className="text-cyan-300">{workRestFilterLabels[workRestRange]}</span></p>
+            </div>
+            <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-mono text-emerald-400">{averageWork}% work</span>
           </div>
-          <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-mono text-emerald-400">{averageWork}% work</span>
-        </div>
 
-        <div className="flex items-center gap-4 text-[10px] font-mono">
-          <span className="flex items-center gap-2 text-red-300"><span className="h-2.5 w-2.5 rounded-sm bg-red-400" />Work</span>
-          <span className="flex items-center gap-2 text-blue-300"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400" />Rest</span>
-          <span className="ml-auto text-gray-500">Average: <span className="text-blue-300">{averageRest}% rest</span></span>
-        </div>
+          <div className="flex items-center gap-4 text-[10px] font-mono">
+            <span className="flex items-center gap-2 text-red-300"><span className="h-2.5 w-2.5 rounded-sm bg-red-400" />Work</span>
+            <span className="flex items-center gap-2 text-blue-300"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400" />Rest</span>
+            <span className="ml-auto text-gray-500">Average: <span className="text-blue-300">{averageRest}% rest</span></span>
+          </div>
 
-        <div className="flex h-9 overflow-hidden rounded-lg border border-gray-700/80 bg-blue-400/80" title={`${averageWork}% Work / ${averageRest}% Rest`}>
-          <div className="flex items-center justify-center bg-red-400/90 text-xs font-bold text-red-950" style={{ width: `${averageWork}%` }}>{averageWork}%</div>
-          <div className="flex flex-1 items-center justify-center text-xs font-bold text-blue-950">{averageRest}%</div>
-        </div>
+          <div className="flex h-9 overflow-hidden rounded-lg border border-gray-700/80 bg-blue-400/80" title={`${averageWork}% Work / ${averageRest}% Rest`}>
+            <div className="flex items-center justify-center bg-red-400/90 text-xs font-bold text-red-950" style={{ width: `${averageWork}%` }}>{averageWork}%</div>
+            <div className="flex flex-1 items-center justify-center text-xs font-bold text-blue-950">{averageRest}%</div>
+          </div>
 
-        <button onClick={() => setIsChartOpen(true)} className="w-full rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-[10px] font-mono text-cyan-300 transition-colors hover:bg-cyan-500/20">Click to view work / rest history</button>
-      </div>
-    </div>
-    {isChartOpen && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`${traineeName} work rest history`} onClick={() => setIsChartOpen(false)}>
-        <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-cyan-500/30 bg-[#12191d] p-5 shadow-[0_0_40px_rgba(34,211,238,0.12)]" onClick={(event) => event.stopPropagation()}>
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div><p className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">Work / Rest History</p><h3 className="mt-1 text-xl font-bold text-white">{traineeName}</h3></div>
-            <button onClick={() => setIsChartOpen(false)} aria-label="Close work rest chart" className="h-8 w-8 rounded-lg border border-gray-700 text-gray-400 hover:border-cyan-400 hover:text-white">×</button>
-          </div>
-          <div className="mb-5 grid grid-cols-2 gap-2">
-            {Object.entries(workRestFilterLabels).map(([range, label]) => <button key={range} onClick={() => { setWorkRestRange(range); setHoveredPoint(null); }} className={`rounded-lg px-3 py-2 text-[10px] font-mono ${workRestRange === range ? 'bg-cyan-300 text-[#071014]' : 'border border-gray-700 bg-[#181b20] text-gray-400 hover:border-cyan-500/50 hover:text-cyan-300'}`}>{label} ({workRestRanges[range].length} {range === 'YEAR' ? 'months' : 'weeks'})</button>)}
-          </div>
-          <div className="mb-4 flex flex-wrap gap-4 text-[10px] font-mono"><span className="flex items-center gap-2 text-red-300"><span className="h-2.5 w-2.5 rounded-sm bg-red-400" />Work</span><span className="flex items-center gap-2 text-blue-300"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400" />Rest</span><span className="ml-auto text-gray-500">Average work: <span className="text-red-300">{averageWork}%</span></span></div>
-          <div className="min-h-0 max-h-[calc(100vh-12rem)] space-y-3 overflow-y-auto rounded-xl border border-gray-800 bg-[#0d1215] p-4">
-            {workRestData.map((point) => <div key={point.label} className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-3 text-[10px] font-mono"><span className="text-gray-500">{point.label}</span><div className="relative flex h-9 overflow-visible rounded-md border border-gray-700/80 bg-blue-400/80" onMouseMove={(event) => setHoveredPoint({ ...point, x: event.clientX, y: event.clientY })} onMouseLeave={() => setHoveredPoint(null)}><ChartTooltip visible={hoveredPoint?.label === point.label} fixed left={hoveredPoint?.x ?? 0} top={(hoveredPoint?.y ?? 0) - 12}><div className="font-bold text-white">{point.label}</div><div className="mt-1 text-red-300">Work: {point.workPercent}%</div><div className="text-blue-300">Rest: {point.restPercent}%</div></ChartTooltip><div className="flex items-center justify-center bg-red-400/90 font-bold text-red-950" style={{ width: `${point.workPercent}%` }}>{point.workPercent}%</div><div className="flex flex-1 items-center justify-center font-bold text-blue-950">{point.restPercent}%</div></div></div>)}
-          </div>
+          <button onClick={() => setIsChartOpen(true)} className="w-full rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-[10px] font-mono text-cyan-300 transition-colors hover:bg-cyan-500/20">Click to view work / rest history</button>
         </div>
       </div>
-    )}
+      {isChartOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`${traineeName} work rest history`} onClick={() => setIsChartOpen(false)}>
+          <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-cyan-500/30 bg-[#12191d] p-5 shadow-[0_0_40px_rgba(34,211,238,0.12)]" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div><p className="text-[10px] font-mono uppercase tracking-widest text-cyan-400">Work / Rest History</p><h3 className="mt-1 text-xl font-bold text-white">{traineeName}</h3></div>
+              <button onClick={() => setIsChartOpen(false)} aria-label="Close work rest chart" className="h-8 w-8 rounded-lg border border-gray-700 text-gray-400 hover:border-cyan-400 hover:text-white">×</button>
+            </div>
+            <div className="mb-5 grid grid-cols-2 gap-2">
+              {Object.entries(workRestFilterLabels).map(([range, label]) => <button key={range} onClick={() => { setWorkRestRange(range); setHoveredPoint(null); }} className={`rounded-lg px-3 py-2 text-[10px] font-mono ${workRestRange === range ? 'bg-cyan-300 text-[#071014]' : 'border border-gray-700 bg-[#181b20] text-gray-400 hover:border-cyan-500/50 hover:text-cyan-300'}`}>{label} ({workRestRanges[range].length} {range === 'YEAR' ? 'months' : 'weeks'})</button>)}
+            </div>
+            <div className="mb-4 flex flex-wrap gap-4 text-[10px] font-mono"><span className="flex items-center gap-2 text-red-300"><span className="h-2.5 w-2.5 rounded-sm bg-red-400" />Work</span><span className="flex items-center gap-2 text-blue-300"><span className="h-2.5 w-2.5 rounded-sm bg-blue-400" />Rest</span><span className="ml-auto text-gray-500">Average work: <span className="text-red-300">{averageWork}%</span></span></div>
+            <div className="min-h-0 max-h-[calc(100vh-12rem)] space-y-3 overflow-y-auto rounded-xl border border-gray-800 bg-[#0d1215] p-4">
+              {workRestData.map((point) => <div key={point.label} className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-3 text-[10px] font-mono"><span className="text-gray-500">{point.label}</span><div className="relative flex h-9 overflow-visible rounded-md border border-gray-700/80 bg-blue-400/80" onMouseMove={(event) => setHoveredPoint({ ...point, x: event.clientX, y: event.clientY })} onMouseLeave={() => setHoveredPoint(null)}><ChartTooltip visible={hoveredPoint?.label === point.label} fixed left={hoveredPoint?.x ?? 0} top={(hoveredPoint?.y ?? 0) - 12}><div className="font-bold text-white">{point.label}</div><div className="mt-1 text-red-300">Work: {point.workPercent}%</div><div className="text-blue-300">Rest: {point.restPercent}%</div></ChartTooltip><div className="flex items-center justify-center bg-red-400/90 font-bold text-red-950" style={{ width: `${point.workPercent}%` }}>{point.workPercent}%</div><div className="flex flex-1 items-center justify-center font-bold text-blue-950">{point.restPercent}%</div></div></div>)}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -617,6 +718,85 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling', points = 0 }) {
         </div>
       </div>
 
+      <div className="min-h-screen bg-[#070b12] text-gray-200 p-6 flex flex-col items-center justify-center font-sans dir-ltr">
+        <div className="w-full max-w-4xl space-y-4">
+
+          {/* Main top card */}
+          <div className="bg-[#0b121e]/80 border border-cyan-900/40 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden backdrop-blur-sm shadow-lg shadow-cyan-950/20">
+            <div className="space-y-1">
+              <h2 className="text-xs font-semibold tracking-widest text-slate-400 uppercase">
+                OVERALL ADHERENCE
+              </h2>
+              <div className="text-5xl font-bold text-white tracking-tight pt-1">
+                78%
+              </div>
+              <p className="text-sm font-medium text-emerald-400 pt-1">
+                You're on track. Keep it up!
+              </p>
+            </div>
+
+            <div className="mt-6 md:mt-0 text-right border-t md:border-t-0 pt-4 md:pt-0 border-slate-800 w-full md:w-auto">
+              <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">
+                Consistent effort leads to real progress.
+              </p>
+              <div className="w-6 h-[2px] bg-cyan-500 my-2 ml-auto"></div>
+              <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase leading-tight">
+                BETTER TRAINING<br />BRIGHTER RESULTS
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom metrics list */}
+          <div className="space-y-3">
+            {metrics.map((metric) => (
+              <div
+                key={metric.id}
+                className="bg-[#0b121e]/80 border border-slate-800/80 hover:border-slate-700/80 rounded-xl p-4 transition-all duration-200 flex items-center justify-between gap-4 cursor-pointer group"
+              >
+                {/* Icon and left text */}
+                <div className="flex items-center gap-4 min-w-[220px]">
+                  <div className={`p-3 rounded-lg border ${metric.iconBg} flex items-center justify-center`}>
+                    {metric.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold tracking-wider text-slate-200 uppercase">
+                      {metric.title}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1 max-w-[160px] leading-snug">
+                      {metric.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Percentage */}
+                <div className="text-2xl font-bold text-white min-w-[65px] text-right">
+                  {metric.percentage}
+                </div>
+
+                {/* Progress bar and subtext */}
+                <div className="flex-1 max-w-md px-2">
+                  <div className="w-full bg-slate-800/60 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full bg-gradient-to-r ${metric.color} transition-all duration-500`}
+                      style={{ width: `${metric.progress}%` }}
+                    />
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-1.5 font-mono">
+                    {metric.subtext}
+                  </div>
+                </div>
+
+                {/* Right chevron arrow */}
+                <div className="text-slate-500 group-hover:text-slate-300 transition-colors pl-2">
+                  <ChevronRightIcon className="w-5 h-5" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
       {/* Target Muscles & Top Exercises */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[#181b20] border border-gray-800/80 rounded-2xl p-5 shadow-lg">
@@ -707,7 +887,10 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling', points = 0 }) {
                   const top = `${((chartHeight - (point.value / chartMax) * chartHeight) / (chartHeight + 42)) * 100}%`;
                   return (
                     <ChartTooltip visible left={`clamp(96px, ${left}, calc(100% - 96px))`} top={top}>
-                      <div className="flex items-center justify-between gap-5"><span className="font-bold text-white">{point.isToday ? 'Today' : point.label}</span><span className="text-gray-500">{point.label}</span></div>
+                      <div className="flex items-center justify-between gap-5">
+                        <span className="font-bold text-white">{point.isToday ? 'Today' : point.label}</span>
+                        {/* <span className="text-gray-500">{point.label}</span> */}
+                      </div>
                       <div className="mt-1 text-lg font-black text-white">{point.value} days</div>
                       <div className="mt-1 text-cyan-300">{point.workouts} workouts</div>
                     </ChartTooltip>
@@ -730,44 +913,44 @@ function TraineeAnalytics({ traineeName = 'Marcus Sterling', points = 0 }) {
                   }}
                   onMouseLeave={() => setHoveredStreakIndex(null)}
                 >
-                <defs>
-                  <linearGradient id="streakAreaGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.46" />
-                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.04" />
-                  </linearGradient>
-                  <filter id="streakGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                  </filter>
-                </defs>
-                {[0, Math.round(chartMax / 2), chartMax].map((value) => {
-                  const y = chartHeight - (value / chartMax) * chartHeight;
-                  return (
-                    <g key={value}>
-                      <line x1="0" y1={y} x2={chartWidth} y2={y} stroke="#27343b" strokeDasharray="4 6" />
-                      <text x="0" y={Math.max(12, y - 5)} fill="#718096" fontSize="11" fontFamily="monospace">{value}</text>
-                    </g>
-                  );
-                })}
-                {streakHistory.map((point, index) => {
-                  if (!point.isReset) return null;
-                  const x = (index / (streakHistory.length - 1)) * chartWidth;
-                  return <line key={`reset-${point.label}`} x1={x} y1="0" x2={x} y2={chartHeight + 2} stroke="#3b5262" strokeDasharray="5 7" strokeWidth="1.5" />;
-                })}
-                <polygon points={chartAreaPoints} fill="url(#streakAreaGradient)" />
-                <polyline points={chartPoints} fill="none" stroke="#38d5f5" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#streakGlow)" />
-                {streakHistory.map((point, index) => {
-                  const x = (index / (streakHistory.length - 1)) * chartWidth;
-                  const y = chartHeight - (point.value / chartMax) * chartHeight;
-                  return (
-                    <g key={point.label}>
-                      {point.isToday && <line x1={x} y1={y - 8} x2={x} y2={chartHeight + 2} stroke="#38d5f5" strokeDasharray="4 5" opacity="0.75" />}
-                      <circle cx={x} cy={y} r={point.isToday ? 8 : hoveredStreakIndex === index ? 8 : 5} fill={point.isToday ? '#f8fafc' : '#0d1820'} stroke="#38d5f5" strokeWidth={point.isToday ? 4 : 2.5} filter={point.isToday ? 'url(#streakGlow)' : undefined} />
-                      {point.isToday && <circle cx={x} cy={y} r="13" fill="none" stroke="#38d5f5" strokeOpacity="0.25" strokeWidth="3" />}
-                      <text x={x} y={chartHeight + 25} textAnchor="middle" fill={point.isToday ? '#e2e8f0' : '#718096'} fontSize="11" fontWeight={point.isToday ? '700' : '400'} fontFamily="monospace">{point.label}</text>
-                    </g>
-                  );
-                })}
+                  <defs>
+                    <linearGradient id="streakAreaGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.46" />
+                      <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.04" />
+                    </linearGradient>
+                    <filter id="streakGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                    </filter>
+                  </defs>
+                  {[0, Math.round(chartMax / 2), chartMax].map((value) => {
+                    const y = chartHeight - (value / chartMax) * chartHeight;
+                    return (
+                      <g key={value}>
+                        <line x1="0" y1={y} x2={chartWidth} y2={y} stroke="#27343b" strokeDasharray="4 6" />
+                        <text x="0" y={Math.max(12, y - 5)} fill="#718096" fontSize="11" fontFamily="monospace">{value}</text>
+                      </g>
+                    );
+                  })}
+                  {streakHistory.map((point, index) => {
+                    if (!point.isReset) return null;
+                    const x = (index / (streakHistory.length - 1)) * chartWidth;
+                    return <line key={`reset-${point.label}`} x1={x} y1="0" x2={x} y2={chartHeight + 2} stroke="#3b5262" strokeDasharray="5 7" strokeWidth="1.5" />;
+                  })}
+                  <polygon points={chartAreaPoints} fill="url(#streakAreaGradient)" />
+                  <polyline points={chartPoints} fill="none" stroke="#38d5f5" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" filter="url(#streakGlow)" />
+                  {streakHistory.map((point, index) => {
+                    const x = (index / (streakHistory.length - 1)) * chartWidth;
+                    const y = chartHeight - (point.value / chartMax) * chartHeight;
+                    return (
+                      <g key={point.label}>
+                        {point.isToday && <line x1={x} y1={y - 8} x2={x} y2={chartHeight + 2} stroke="#38d5f5" strokeDasharray="4 5" opacity="0.75" />}
+                        <circle cx={x} cy={y} r={point.isToday ? 8 : hoveredStreakIndex === index ? 8 : 5} fill={point.isToday ? '#f8fafc' : '#0d1820'} stroke="#38d5f5" strokeWidth={point.isToday ? 4 : 2.5} filter={point.isToday ? 'url(#streakGlow)' : undefined} />
+                        {point.isToday && <circle cx={x} cy={y} r="13" fill="none" stroke="#38d5f5" strokeOpacity="0.25" strokeWidth="3" />}
+                        <text x={x} y={chartHeight + 25} textAnchor="middle" fill={point.isToday ? '#e2e8f0' : '#718096'} fontSize="11" fontWeight={point.isToday ? '700' : '400'} fontFamily="monospace">{point.label}</text>
+                      </g>
+                    );
+                  })}
                 </svg>
               </div>
             </div>
